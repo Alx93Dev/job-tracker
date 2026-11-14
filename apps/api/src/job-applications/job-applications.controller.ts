@@ -11,7 +11,17 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { ACCESS_TOKEN_COOKIE } from '../auth/auth.constants';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { CreateJobApplicationDto } from './dto/create-job-application.dto';
 import { JobApplicationResponseDto } from './dto/job-application-response.dto';
 import { ListJobApplicationsQueryDto } from './dto/list-job-applications-query.dto';
@@ -19,41 +29,56 @@ import { UpdateJobApplicationDto } from './dto/update-job-application.dto';
 import { JobApplicationsService } from './job-applications.service';
 
 @ApiTags('job-applications')
+@ApiCookieAuth(ACCESS_TOKEN_COOKIE)
+@ApiUnauthorizedResponse()
 @Controller('job-applications')
 export class JobApplicationsController {
   constructor(private readonly jobApplicationsService: JobApplicationsService) {}
 
   @Get()
   @ApiOkResponse({ type: JobApplicationResponseDto, isArray: true })
-  findAll(@Query() query: ListJobApplicationsQueryDto): Promise<JobApplicationResponseDto[]> {
-    return this.jobApplicationsService.findAll(query);
+  findAll(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Query() query: ListJobApplicationsQueryDto,
+  ): Promise<JobApplicationResponseDto[]> {
+    return this.jobApplicationsService.findAll(currentUser.id, query);
   }
 
   @Get(':id')
   @ApiOkResponse({ type: JobApplicationResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<JobApplicationResponseDto> {
-    return this.jobApplicationsService.findOne(id);
+  findOne(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<JobApplicationResponseDto> {
+    return this.jobApplicationsService.findOne(currentUser.id, id);
   }
 
   @Post()
   @ApiCreatedResponse({ type: JobApplicationResponseDto })
-  create(@Body() createDto: CreateJobApplicationDto): Promise<JobApplicationResponseDto> {
-    return this.jobApplicationsService.create(createDto);
+  create(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Body() createDto: CreateJobApplicationDto,
+  ): Promise<JobApplicationResponseDto> {
+    return this.jobApplicationsService.create(currentUser.id, createDto);
   }
 
   @Patch(':id')
   @ApiOkResponse({ type: JobApplicationResponseDto })
   update(
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateJobApplicationDto,
   ): Promise<JobApplicationResponseDto> {
-    return this.jobApplicationsService.update(id, updateDto);
+    return this.jobApplicationsService.update(currentUser.id, id, updateDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.jobApplicationsService.remove(id);
+  remove(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.jobApplicationsService.remove(currentUser.id, id);
   }
 }

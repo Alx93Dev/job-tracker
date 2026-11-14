@@ -1,20 +1,68 @@
-import { plainToInstance } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsOptional, IsString, Max, Min, validateSync } from 'class-validator';
+import { plainToInstance, Transform } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEmail,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+  MinLength,
+  validateSync,
+} from 'class-validator';
+import {
+  DEFAULT_ACCESS_TOKEN_TTL_SECONDS,
+  DEFAULT_PORT,
+  DEFAULT_REFRESH_TOKEN_TTL_DAYS,
+  DEFAULT_TRUSTED_PROXY_HOPS,
+  JWT_SECRET_MIN_LENGTH,
+  MAX_PORT,
+} from './app.constants';
 
-class EnvironmentVariables {
+function parseBooleanFlag(rawValue: unknown): boolean {
+  return rawValue === true || rawValue === 'true';
+}
+
+export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   DATABASE_URL!: string;
 
-  @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(65535)
-  PORT?: number;
+  @Max(MAX_PORT)
+  PORT: number = DEFAULT_PORT;
 
   @IsString()
   @IsNotEmpty()
   CORS_ORIGIN!: string;
+
+  @IsString()
+  @MinLength(JWT_SECRET_MIN_LENGTH)
+  JWT_ACCESS_SECRET!: string;
+
+  @IsInt()
+  @Min(1)
+  ACCESS_TOKEN_TTL_SECONDS: number = DEFAULT_ACCESS_TOKEN_TTL_SECONDS;
+
+  @IsInt()
+  @Min(1)
+  REFRESH_TOKEN_TTL_DAYS: number = DEFAULT_REFRESH_TOKEN_TTL_DAYS;
+
+  // Implicit conversion turns the string "false" into `true` before this runs,
+  // so the raw value is read from the source object instead.
+  @Transform(({ obj }: { obj: Record<string, unknown> }) => parseBooleanFlag(obj.COOKIE_SECURE))
+  @IsBoolean()
+  COOKIE_SECURE: boolean = false;
+
+  @IsInt()
+  @Min(0)
+  TRUSTED_PROXY_HOPS: number = DEFAULT_TRUSTED_PROXY_HOPS;
+
+  @IsOptional()
+  @IsEmail()
+  DEMO_USER_EMAIL?: string;
 }
 
 export function validateEnvironment(rawConfig: Record<string, unknown>): EnvironmentVariables {

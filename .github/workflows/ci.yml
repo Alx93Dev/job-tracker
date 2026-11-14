@@ -13,7 +13,7 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      API_PROXY_TARGET: http://localhost:4000
     steps:
       - uses: actions/checkout@v4
 
