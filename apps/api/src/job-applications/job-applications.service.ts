@@ -8,6 +8,7 @@ import { UpdateJobApplicationDto } from './dto/update-job-application.dto';
 import {
   jobApplicationResponseSelect,
   PRISMA_RECORD_NOT_FOUND_CODE,
+  SEARCHABLE_FIELDS,
 } from './job-applications.constants';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class JobApplicationsService {
 
   findAll(query: ListJobApplicationsQueryDto): Promise<JobApplicationResponseDto[]> {
     return this.prisma.jobApplication.findMany({
-      where: { status: query.status },
+      where: { status: query.status, OR: this.buildSearchFilter(query.search) },
       orderBy: { updatedAt: 'desc' },
       select: jobApplicationResponseSelect,
     });
@@ -60,6 +61,15 @@ export class JobApplicationsService {
     } catch (error) {
       throw this.mapPrismaError(error, id);
     }
+  }
+
+  private buildSearchFilter(search?: string): Prisma.JobApplicationWhereInput[] | undefined {
+    if (!search) {
+      return undefined;
+    }
+
+    const containsSearch = { contains: search, mode: Prisma.QueryMode.insensitive };
+    return SEARCHABLE_FIELDS.map((field) => ({ [field]: containsSearch }));
   }
 
   private mapPrismaError(error: unknown, id: string): unknown {

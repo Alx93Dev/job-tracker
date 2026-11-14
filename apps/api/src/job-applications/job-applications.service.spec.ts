@@ -66,6 +66,36 @@ describe('JobApplicationsService', () => {
     );
   });
 
+  it('searches company, position and location case-insensitively', async () => {
+    jobApplicationRepository.findMany.mockResolvedValue([]);
+
+    await service.findAll({ search: 'acme' });
+
+    const containsAcme = { contains: 'acme', mode: Prisma.QueryMode.insensitive };
+    expect(jobApplicationRepository.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: undefined,
+          OR: [
+            { companyName: containsAcme },
+            { positionTitle: containsAcme },
+            { location: containsAcme },
+          ],
+        },
+      }),
+    );
+  });
+
+  it('does not add a search filter when search is empty', async () => {
+    jobApplicationRepository.findMany.mockResolvedValue([]);
+
+    await service.findAll({ search: '' });
+
+    expect(jobApplicationRepository.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: undefined, OR: undefined } }),
+    );
+  });
+
   it('returns the application when it exists', async () => {
     jobApplicationRepository.findUnique.mockResolvedValue(storedApplication);
 
