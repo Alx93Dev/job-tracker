@@ -2,7 +2,16 @@
 
 Full-stack app to track job applications from wishlist to offer. Built as a portfolio project to practise a modern React + NestJS stack end to end.
 
-> **Status:** Phase 1 of 6 — CRUD foundation. See the [roadmap](#roadmap).
+> **Status:** Phase 2 of 6 — Kanban board & UX. See the [roadmap](#roadmap).
+
+## Features
+
+- **Kanban board** with drag and drop between Wishlist → Applied → Interview → Offer → Rejected, usable with mouse, touch **and keyboard** (space to pick up, ←/→ to change column) with screen reader announcements
+- **Optimistic updates:** cards move instantly and roll back automatically if the server rejects the change
+- **Search** across company, position and location (debounced, server-side)
+- **Board / list views**, kept in the URL (`?view=list`) so they survive reloads and can be shared
+- **Light / dark / system theme** without flash on load
+- Create, edit and delete applications with validated, accessible forms
 
 ## Tech stack
 
@@ -11,6 +20,7 @@ Full-stack app to track job applications from wishlist to offer. Built as a port
 | Frontend   | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4 |
 | Data       | TanStack Query 5 (server state)                               |
 | Forms      | React Hook Form + Zod                                         |
+| UX         | dnd-kit (accessible drag and drop), next-themes               |
 | Backend    | NestJS 11, class-validator, Swagger / OpenAPI                 |
 | Database   | PostgreSQL 17 + Prisma 6                                      |
 | Testing    | Vitest + Testing Library (web), Jest (api)                    |
@@ -23,8 +33,10 @@ job-tracker/
 ├── apps/
 │   ├── web/                     Next.js client
 │   │   └── src/
-│   │       ├── app/             Routes (list, new, edit)
-│   │       ├── features/        Feature modules (api, hooks, components, schemas)
+│   │       ├── app/             Routes (board/list, new, edit)
+│   │       ├── features/        Feature modules (api, hooks, components, schemas, utils)
+│   │       ├── components/      Shared UI (theme toggle)
+│   │       ├── hooks/           Shared hooks (debounce)
 │   │       └── lib/             HTTP client and environment
 │   └── api/                     NestJS REST API
 │       ├── prisma/              Schema, migrations, seed
@@ -72,7 +84,7 @@ pnpm dev            # web on :3000, api on :4000
 
 | Method | Endpoint                     | Description                                  |
 | ------ | ---------------------------- | -------------------------------------------- |
-| GET    | `/api/job-applications`      | List applications (optional `?status=`)      |
+| GET    | `/api/job-applications`      | List applications (`?status=`, `?search=`)   |
 | GET    | `/api/job-applications/:id`  | Get one application                          |
 | POST   | `/api/job-applications`      | Create an application                        |
 | PATCH  | `/api/job-applications/:id`  | Update an application                        |
@@ -86,11 +98,14 @@ pnpm dev            # web on :3000, api on :4000
 - **Prisma `select` projections.** Every read returns only the fields in the response DTO instead of full entities.
 - **Feature-based folders** (`features/job-applications`) so each domain area owns its API calls, hooks, schemas and components.
 - **Accessibility from the start:** labelled inputs, `aria-invalid` + `aria-describedby` on errors, `role="alert"` for failures, `aria-pressed` on filters.
+- **Optimistic status changes across every cached list.** On drop, the mutation snapshots all cached list queries, applies the change to each one (removing the card from lists filtered by its old status), and restores the snapshots if the request fails. The logic lives in a pure `applyStatusChange` function so it is unit-tested without React.
+- **Column-to-column keyboard dragging.** dnd-kit's default keyboard sensor moves in small pixel steps; a custom coordinate getter jumps straight to the adjacent column, so a keyboard user needs one key press per column.
+- **dnd-kit `core` instead of `sortable`.** Cards are ordered by last update, so the board only needs to move cards between columns; manual ordering within a column would need a persisted position field and is left out on purpose.
 
 ## Roadmap
 
 - [x] **Phase 1 — Foundation:** monorepo, CRUD API, list and form UI, CI
-- [ ] **Phase 2 — Kanban & UX:** drag-and-drop board, optimistic updates, search, dark mode toggle
+- [x] **Phase 2 — Kanban & UX:** drag-and-drop board, optimistic updates, search, dark mode toggle
 - [ ] **Phase 3 — Auth:** sign-up / login, per-user data, demo account
 - [ ] **Phase 4 — AI:** extract fields from a job posting, match it against your CV
 - [ ] **Phase 5 — Reminders & analytics:** follow-up jobs, response-rate dashboard

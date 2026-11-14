@@ -1,19 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { jobApplicationsApi } from '../api/job-applications-api';
-import type { ApplicationStatus } from '../types/application-status';
+import type { JobApplication } from '../types/job-application';
+import type { JobApplicationFilters } from '../types/job-application-filters';
 import type { JobApplicationPayload } from '../types/job-application-payload';
+import { applyStatusChange, type StatusChange } from '../utils/apply-status-change';
 
 export const jobApplicationKeys = {
   all: ['job-applications'] as const,
-  list: (status?: ApplicationStatus) =>
-    [...jobApplicationKeys.all, 'list', status ?? 'ALL'] as const,
+  lists: () => [...jobApplicationKeys.all, 'list'] as const,
+  list: (filters: JobApplicationFilters) => [...jobApplicationKeys.lists(), filters] as const,
   detail: (id: string) => [...jobApplicationKeys.all, 'detail', id] as const,
 };
 
-export function useJobApplications(status?: ApplicationStatus) {
+type ListQueryKey = ReturnType<typeof jobApplicationKeys.list>;
+
+export function useJobApplications(filters: JobApplicationFilters) {
   return useQuery({
-    queryKey: jobApplicationKeys.list(status),
-    queryFn: () => jobApplicationsApi.list(status),
+    queryKey: jobApplicationKeys.list(filters),
+    queryFn: () => jobApplicationsApi.list(filters),
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -37,6 +42,42 @@ export function useUpdateJobApplication(id: string) {
   return useMutation({
     mutationFn: (payload: JobApplicationPayload) => jobApplicationsApi.update(id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: jobApplicationKeys.all }),
+  });
+}
+
+export function useChangeJobApplicationStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: StatusChange) => jobApplicationsApi.update(id, { status }),
+
+    onMutate: async (statusChange) => {
+      await queryClient.cancelQueries({ queryKey: jobApplicationKeys.lists() });
+
+      const previousLists = queryClient.getQueriesData<JobApplication[]>({
+        queryKey: jobApplicationKeys.lists(),
+      });
+      const changedAt = new Date().toISOString();
+
+      for (const [queryKey, cachedApplications] of previousLists) {
+        if (!cachedApplications) continue;
+        const [, , filters] = queryKey as ListQueryKey;
+        queryClient.setQueryData(
+          queryKey,
+          applyStatusChange(cachedApplications, statusChange, filters, changedAt),
+        );
+      }
+
+      return { previousLists };
+    },
+
+    onError: (_error, _statusChange, mutationContext) => {
+      for (const [queryKey, cachedApplications] of mutationContext?.previousLists ?? []) {
+        queryClient.setQueryData(queryKey, cachedApplications);
+      }
+    },
+
+    onSettled: () => queryClient.invalidateQueries({ queryKey: jobApplicationKeys.all }),
   });
 }
 

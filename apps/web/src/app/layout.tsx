@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/theme-toggle';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -13,17 +14,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} antialiased`}>
         <Providers>
           <header className="border-b border-slate-200 dark:border-slate-800">
-            <nav className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+            <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
               <Link href="/" className="text-lg font-semibold">
                 Job Tracker
               </Link>
+              <ThemeToggle />
             </nav>
           </header>
-          <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+          <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
         </Providers>
       </body>
     </html>
