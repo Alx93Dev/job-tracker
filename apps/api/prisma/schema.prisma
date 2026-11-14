@@ -15,8 +15,33 @@ enum ApplicationStatus {
   REJECTED
 }
 
+model User {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  passwordHash    String
+  name            String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  jobApplications JobApplication[]
+  refreshTokens   RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
 model JobApplication {
   id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   companyName   String
   positionTitle String
   jobUrl        String?
@@ -28,5 +53,5 @@ model JobApplication {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  @@index([status])
+  @@index([userId, status])
 }

@@ -2,12 +2,10 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ApplicationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { jobApplicationResponseSelect } from './job-applications.constants';
 import { JobApplicationsService } from './job-applications.service';
-import {
-  jobApplicationResponseSelect,
-  PRISMA_RECORD_NOT_FOUND_CODE,
-} from './job-applications.constants';
 
+const ownerUserId = 'owner-user-id';
 const existingApplicationId = '7b1f6a3e-2c4d-4e5f-8a9b-0c1d2e3f4a5b';
 
 const storedApplication = {
@@ -24,20 +22,13 @@ const storedApplication = {
   updatedAt: new Date('2026-11-03'),
 };
 
-function buildRecordNotFoundError(): Prisma.PrismaClientKnownRequestError {
-  return new Prisma.PrismaClientKnownRequestError('Record not found', {
-    code: PRISMA_RECORD_NOT_FOUND_CODE,
-    clientVersion: 'test',
-  });
-}
-
 describe('JobApplicationsService', () => {
   const jobApplicationRepository = {
     findMany: jest.fn(),
-    findUnique: jest.fn(),
+    findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn(),
+    deleteMany: jest.fn(),
   };
   let service: JobApplicationsService;
 
@@ -52,15 +43,15 @@ describe('JobApplicationsService', () => {
     service = testingModule.get(JobApplicationsService);
   });
 
-  it('filters by status and projects only the response fields', async () => {
+  it('lists only the current user applications, filtered by status', async () => {
     jobApplicationRepository.findMany.mockResolvedValue([storedApplication]);
 
-    const applications = await service.findAll({ status: ApplicationStatus.APPLIED });
+    const applications = await service.findAll(ownerUserId, { status: ApplicationStatus.APPLIED });
 
     expect(applications).toEqual([storedApplication]);
     expect(jobApplicationRepository.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { status: ApplicationStatus.APPLIED },
+        where: { userId: ownerUserId, status: ApplicationStatus.APPLIED, OR: undefined },
         select: jobApplicationResponseSelect,
       }),
     );
@@ -69,12 +60,13 @@ describe('JobApplicationsService', () => {
   it('searches company, position and location case-insensitively', async () => {
     jobApplicationRepository.findMany.mockResolvedValue([]);
 
-    await service.findAll({ search: 'acme' });
+    await service.findAll(ownerUserId, { search: 'acme' });
 
     const containsAcme = { contains: 'acme', mode: Prisma.QueryMode.insensitive };
     expect(jobApplicationRepository.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
+          userId: ownerUserId,
           status: undefined,
           OR: [
             { companyName: containsAcme },
@@ -86,46 +78,75 @@ describe('JobApplicationsService', () => {
     );
   });
 
-  it('does not add a search filter when search is empty', async () => {
-    jobApplicationRepository.findMany.mockResolvedValue([]);
+  it('assigns new applications to the current user', async () => {
+    jobApplicationRepository.create.mockResolvedValue(storedApplication);
 
-    await service.findAll({ search: '' });
+    await service.create(ownerUserId, { companyName: 'Acme', positionTitle: 'Dev' });
 
-    expect(jobApplicationRepository.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: undefined, OR: undefined } }),
+    expect(jobApplicationRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { companyName: 'Acme', positionTitle: 'Dev', userId: ownerUserId },
+      }),
     );
   });
 
-  it('returns the application when it exists', async () => {
-    jobApplicationRepository.findUnique.mockResolvedValue(storedApplication);
+  it('returns an application owned by the current user', async () => {
+    jobApplicationRepository.findFirst.mockResolvedValue(storedApplication);
 
-    await expect(service.findOne(existingApplicationId)).resolves.toEqual(storedApplication);
+    await expect(service.findOne(ownerUserId, existingApplicationId)).resolves.toEqual(
+      storedApplication,
+    );
+    expect(jobApplicationRepository.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: existingApplicationId, userId: ownerUserId } }),
+    );
   });
 
-  it('throws NotFoundException when the application does not exist', async () => {
-    jobApplicationRepository.findUnique.mockResolvedValue(null);
+  it('answers 404 for applications that do not belong to the current user', async () => {
+    jobApplicationRepository.findFirst.mockResolvedValue(null);
 
-    await expect(service.findOne(existingApplicationId)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.findOne('other-user', existingApplicationId)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
-  it('maps a missing record on update to NotFoundException', async () => {
-    jobApplicationRepository.update.mockRejectedValue(buildRecordNotFoundError());
+  it('does not update applications owned by another user', async () => {
+    jobApplicationRepository.findFirst.mockResolvedValue(null);
 
     await expect(
-      service.update(existingApplicationId, { status: ApplicationStatus.OFFER }),
+      service.update('other-user', existingApplicationId, { status: ApplicationStatus.OFFER }),
     ).rejects.toBeInstanceOf(NotFoundException);
+    expect(jobApplicationRepository.update).not.toHaveBeenCalled();
   });
 
-  it('maps a missing record on delete to NotFoundException', async () => {
-    jobApplicationRepository.delete.mockRejectedValue(buildRecordNotFoundError());
+  it('updates applications owned by the current user', async () => {
+    jobApplicationRepository.findFirst.mockResolvedValue({ id: existingApplicationId });
+    jobApplicationRepository.update.mockResolvedValue({
+      ...storedApplication,
+      status: ApplicationStatus.OFFER,
+    });
 
-    await expect(service.remove(existingApplicationId)).rejects.toBeInstanceOf(NotFoundException);
+    const updatedApplication = await service.update(ownerUserId, existingApplicationId, {
+      status: ApplicationStatus.OFFER,
+    });
+
+    expect(updatedApplication.status).toBe(ApplicationStatus.OFFER);
   });
 
-  it('rethrows unexpected database errors unchanged', async () => {
-    const connectionError = new Error('Connection lost');
-    jobApplicationRepository.delete.mockRejectedValue(connectionError);
+  it('deletes only within the current user scope', async () => {
+    jobApplicationRepository.deleteMany.mockResolvedValue({ count: 1 });
 
-    await expect(service.remove(existingApplicationId)).rejects.toBe(connectionError);
+    await service.remove(ownerUserId, existingApplicationId);
+
+    expect(jobApplicationRepository.deleteMany).toHaveBeenCalledWith({
+      where: { id: existingApplicationId, userId: ownerUserId },
+    });
+  });
+
+  it('answers 404 when there is nothing to delete for the current user', async () => {
+    jobApplicationRepository.deleteMany.mockResolvedValue({ count: 0 });
+
+    await expect(service.remove('other-user', existingApplicationId)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

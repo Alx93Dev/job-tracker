@@ -6,8 +6,6 @@ export const JOB_APPLICATION_LIMITS = {
   notesMaxLength: 5000,
 } as const;
 
-export const PRISMA_RECORD_NOT_FOUND_CODE = 'P2025';
-
 export const SEARCHABLE_FIELDS = ['companyName', 'positionTitle', 'location'] as const;
 
 export const jobApplicationResponseSelect = {

@@ -1,8 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useId } from 'react';
-import { useForm, type FieldError, type UseFormRegisterReturn } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import { FormField } from '@/components/form/form-field';
+import { INPUT_CLASS_NAME, PRIMARY_BUTTON_CLASS_NAME } from '@/components/form/form-styles';
 import { APPLICATION_STATUS_LABELS } from '../constants/application-status-display';
 import {
   emptyJobApplicationFormValues,
@@ -20,9 +21,6 @@ interface JobApplicationFormProps {
   submitErrorMessage?: string;
   onSubmit: (payload: JobApplicationPayload) => void;
 }
-
-const inputClassName =
-  'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 aria-[invalid=true]:border-rose-500 dark:border-slate-700 dark:bg-slate-900';
 
 export function JobApplicationForm({
   initialValues = emptyJobApplicationFormValues,
@@ -79,7 +77,7 @@ export function JobApplicationForm({
 
       <label className="flex flex-col gap-1.5 text-sm font-medium">
         Status
-        <select {...register('status')} className={inputClassName}>
+        <select {...register('status')} className={INPUT_CLASS_NAME}>
           {APPLICATION_STATUSES.map((status) => (
             <option key={status} value={status}>
               {APPLICATION_STATUS_LABELS[status]}
@@ -90,7 +88,7 @@ export function JobApplicationForm({
 
       <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2">
         Notes
-        <textarea {...register('notes')} rows={4} className={inputClassName} />
+        <textarea {...register('notes')} rows={4} className={INPUT_CLASS_NAME} />
       </label>
 
       {submitErrorMessage && (
@@ -100,54 +98,10 @@ export function JobApplicationForm({
       )}
 
       <div className="sm:col-span-2">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60"
-        >
+        <button type="submit" disabled={isSubmitting} className={PRIMARY_BUTTON_CLASS_NAME}>
           {isSubmitting ? 'Saving…' : submitLabel}
         </button>
       </div>
     </form>
-  );
-}
-
-interface FormFieldProps {
-  label: string;
-  registration: UseFormRegisterReturn;
-  error?: FieldError;
-  type?: 'text' | 'url' | 'date';
-  required?: boolean;
-}
-
-function FormField({
-  label,
-  registration,
-  error,
-  type = 'text',
-  required = false,
-}: FormFieldProps) {
-  const errorId = useId();
-
-  return (
-    <label className="flex flex-col gap-1.5 text-sm font-medium">
-      <span>
-        {label}
-        {required && <span aria-hidden="true"> *</span>}
-      </span>
-      <input
-        {...registration}
-        type={type}
-        aria-required={required}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
-        className={inputClassName}
-      />
-      {error && (
-        <span id={errorId} className="text-xs font-normal text-rose-600">
-          {error.message}
-        </span>
-      )}
-    </label>
   );
 }

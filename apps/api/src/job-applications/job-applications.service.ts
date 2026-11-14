@@ -5,27 +5,26 @@ import { CreateJobApplicationDto } from './dto/create-job-application.dto';
 import { JobApplicationResponseDto } from './dto/job-application-response.dto';
 import { ListJobApplicationsQueryDto } from './dto/list-job-applications-query.dto';
 import { UpdateJobApplicationDto } from './dto/update-job-application.dto';
-import {
-  jobApplicationResponseSelect,
-  PRISMA_RECORD_NOT_FOUND_CODE,
-  SEARCHABLE_FIELDS,
-} from './job-applications.constants';
+import { jobApplicationResponseSelect, SEARCHABLE_FIELDS } from './job-applications.constants';
 
 @Injectable()
 export class JobApplicationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(query: ListJobApplicationsQueryDto): Promise<JobApplicationResponseDto[]> {
+  findAll(
+    userId: string,
+    query: ListJobApplicationsQueryDto,
+  ): Promise<JobApplicationResponseDto[]> {
     return this.prisma.jobApplication.findMany({
-      where: { status: query.status, OR: this.buildSearchFilter(query.search) },
+      where: { userId, status: query.status, OR: this.buildSearchFilter(query.search) },
       orderBy: { updatedAt: 'desc' },
       select: jobApplicationResponseSelect,
     });
   }
 
-  async findOne(id: string): Promise<JobApplicationResponseDto> {
-    const jobApplication = await this.prisma.jobApplication.findUnique({
-      where: { id },
+  async findOne(userId: string, id: string): Promise<JobApplicationResponseDto> {
+    const jobApplication = await this.prisma.jobApplication.findFirst({
+      where: { id, userId },
       select: jobApplicationResponseSelect,
     });
 
@@ -36,30 +35,48 @@ export class JobApplicationsService {
     return jobApplication;
   }
 
-  create(createDto: CreateJobApplicationDto): Promise<JobApplicationResponseDto> {
+  create(userId: string, createDto: CreateJobApplicationDto): Promise<JobApplicationResponseDto> {
     return this.prisma.jobApplication.create({
-      data: createDto,
+      data: { ...createDto, userId },
       select: jobApplicationResponseSelect,
     });
   }
 
-  async update(id: string, updateDto: UpdateJobApplicationDto): Promise<JobApplicationResponseDto> {
-    try {
-      return await this.prisma.jobApplication.update({
-        where: { id },
-        data: updateDto,
-        select: jobApplicationResponseSelect,
-      });
-    } catch (error) {
-      throw this.mapPrismaError(error, id);
+  async update(
+    userId: string,
+    id: string,
+    updateDto: UpdateJobApplicationDto,
+  ): Promise<JobApplicationResponseDto> {
+    await this.assertOwnedByUser(userId, id);
+    return this.prisma.jobApplication.update({
+      where: { id },
+      data: updateDto,
+      select: jobApplicationResponseSelect,
+    });
+  }
+
+  async remove(userId: string, id: string): Promise<void> {
+    const { count: deletedCount } = await this.prisma.jobApplication.deleteMany({
+      where: { id, userId },
+    });
+
+    if (deletedCount === 0) {
+      throw this.buildNotFoundException(id);
     }
   }
 
-  async remove(id: string): Promise<void> {
-    try {
-      await this.prisma.jobApplication.delete({ where: { id } });
-    } catch (error) {
-      throw this.mapPrismaError(error, id);
+  /**
+   * Applications owned by someone else answer 404 instead of 403, so the API does not
+   * reveal which ids exist.
+   */
+  private async assertOwnedByUser(userId: string, id: string): Promise<void> {
+    const ownedApplication = await this.prisma.jobApplication.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+
+    if (!ownedApplication) {
+      throw this.buildNotFoundException(id);
     }
   }
 
@@ -70,14 +87,6 @@ export class JobApplicationsService {
 
     const containsSearch = { contains: search, mode: Prisma.QueryMode.insensitive };
     return SEARCHABLE_FIELDS.map((field) => ({ [field]: containsSearch }));
-  }
-
-  private mapPrismaError(error: unknown, id: string): unknown {
-    const isRecordNotFound =
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === PRISMA_RECORD_NOT_FOUND_CODE;
-
-    return isRecordNotFound ? this.buildNotFoundException(id) : error;
   }
 
   private buildNotFoundException(id: string): NotFoundException {

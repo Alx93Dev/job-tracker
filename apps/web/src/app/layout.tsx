@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { UserMenu } from '@/features/auth/components/user-menu';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -22,7 +23,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/" className="text-lg font-semibold">
                 Job Tracker
               </Link>
-              <ThemeToggle />
+              <div className="flex items-center gap-2">
+                <UserMenu />
+                <ThemeToggle />
+              </div>
             </nav>
           </header>
           <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
