@@ -2,7 +2,9 @@
 
 Full-stack app to track job applications from wishlist to offer. Built as a portfolio project to practise a modern React + NestJS stack end to end.
 
-> **Status:** all six phases built and tested; public deployment pending. See the [roadmap](#roadmap).
+**[▶ Live demo](https://job-tracker-web-gray.vercel.app)**: click **Try the demo** to explore with sample data, no sign-up needed. The demo account is shared and resets on every deployment.
+
+> **Status:** all six phases built, tested and deployed on Vercel. See the [roadmap](#roadmap).
 
 | Board                                                                         | Analytics                                                                             |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -262,4 +264,4 @@ Every endpoint except register, login, demo, refresh and logout requires a sessi
 - [x] **Phase 4 — AI:** extract fields from a job posting, match it against your CV
 - [x] **Phase 5 — Reminders & analytics:** follow-up jobs, response-rate dashboard
 - [x] **Phase 6 — Polish:** Playwright E2E with axe accessibility checks, Lighthouse audit and fixes, production Docker images, health check
-- [ ] **Public deployment** with the demo URL in the repository description
+- [x] **Public deployment** on Vercel (web + API) with Neon PostgreSQL: [job-tracker-web-gray.vercel.app](https://job-tracker-web-gray.vercel.app)
