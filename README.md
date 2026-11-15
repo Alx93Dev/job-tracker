@@ -134,6 +134,38 @@ Signed-in pages are excluded from indexing on purpose (`robots.txt`), so their S
 
 ## Deployment
 
+### Vercel (recommended)
+
+The repository deploys as **two Vercel projects** from the same Git repository, plus a managed PostgreSQL:
+
+```
+Browser ──► web project (Next.js) ──rewrite /api/*──► api project (NestJS function) ──► PostgreSQL (Neon)
+                                                          ▲
+                                     Vercel Cron Job ─────┘ GET /api/cron/follow-up-reminders (daily)
+```
+
+- **API project** (Root Directory `apps/api`): NestJS runs as a single Vercel Function. `apps/api/vercel.json` sets the build command (`scripts/vercel-build.mjs`) and a daily cron job. **Production** builds apply pending migrations and refresh the demo account; **preview** builds never touch the database.
+- **Web project** (Root Directory `apps/web`): standard Next.js. `API_PROXY_TARGET` points at the API project's production URL, so the browser only talks to the web domain and the auth cookies stay first-party.
+- **Reminders:** serverless instances are frozen between requests, so on Vercel (`VERCEL=1`) the in-process scheduler is off and the Vercel Cron Job calls `/api/cron/follow-up-reminders` with `Authorization: Bearer <CRON_SECRET>`. On the Hobby plan cron jobs run once a day, within the scheduled hour.
+
+**Environment variables**
+
+| Project | Variable              | Value                                                      |
+| ------- | --------------------- | ---------------------------------------------------------- |
+| api     | `DATABASE_URL`        | Pooled connection string, with `pgbouncer=true` added      |
+| api     | `DIRECT_DATABASE_URL` | Direct (unpooled) connection string, used for migrations   |
+| api     | `JWT_ACCESS_SECRET`   | Random, at least 32 characters                             |
+| api     | `CRON_SECRET`         | Random letters and numbers, at least 16 characters         |
+| api     | `COOKIE_SECURE`       | `true`                                                     |
+| api     | `CORS_ORIGIN`         | The web project's production URL                           |
+| api     | `DEMO_USER_EMAIL`     | `demo@jobtracker.dev` (enables **Try the demo**)           |
+| api     | `ANTHROPIC_API_KEY`   | Optional; without it the AI features answer 503            |
+| web     | `API_PROXY_TARGET`    | The API project's production URL, without a trailing slash |
+
+Set the database variables for the **Production** environment only, so preview deployments cannot reach production data. Every production deployment of the API resets the shared demo account.
+
+### Docker
+
 Both apps ship as Docker images (built in CI on every pull request):
 
 - **API** (`apps/api/Dockerfile`): applies pending migrations on start (`prisma migrate deploy`, never destructive), runs as a non-root user and exposes `GET /api/health` for the platform's health check.

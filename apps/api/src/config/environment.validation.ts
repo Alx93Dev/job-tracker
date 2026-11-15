@@ -16,6 +16,7 @@ import {
   DEFAULT_PORT,
   DEFAULT_REFRESH_TOKEN_TTL_DAYS,
   DEFAULT_TRUSTED_PROXY_HOPS,
+  CRON_SECRET_MIN_LENGTH,
   JWT_SECRET_MIN_LENGTH,
   MAX_PORT,
 } from './app.constants';
@@ -74,6 +75,14 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   ANTHROPIC_MODEL: string = DEFAULT_CLAUDE_MODEL;
+
+  // Shared secret Vercel Cron Jobs send as "Authorization: Bearer <secret>".
+  // Empty (as copied from .env.example) means the cron endpoint is disabled.
+  @Transform(({ obj }: { obj: Record<string, unknown> }) => obj.CRON_SECRET || undefined)
+  @IsOptional()
+  @IsString()
+  @MinLength(CRON_SECRET_MIN_LENGTH)
+  CRON_SECRET?: string;
 
   @IsOptional()
   @IsInt()
