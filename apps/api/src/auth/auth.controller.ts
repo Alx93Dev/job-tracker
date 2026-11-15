@@ -6,9 +6,9 @@ import {
   ApiTags,
   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AUTH_RATE_LIMIT } from '../config/rate-limits';
+import { SharedRateLimit } from '../rate-limit/shared-rate-limit.decorator';
 import { REFRESH_TOKEN_COOKIE } from './auth.constants';
 import { AuthCookieService } from './auth-cookie.service';
 import { AuthService } from './auth.service';
@@ -33,7 +33,7 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Throttle({ default: AUTH_RATE_LIMIT })
+  @SharedRateLimit('auth:register', AUTH_RATE_LIMIT)
   @Post('register')
   @ApiCreatedResponse({ type: UserResponseDto })
   @ApiTooManyRequestsResponse()
@@ -45,7 +45,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: AUTH_RATE_LIMIT })
+  @SharedRateLimit('auth:login', AUTH_RATE_LIMIT)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: UserResponseDto })
@@ -58,7 +58,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: AUTH_RATE_LIMIT })
+  @SharedRateLimit('auth:demo', AUTH_RATE_LIMIT)
   @Post('demo')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: UserResponseDto })

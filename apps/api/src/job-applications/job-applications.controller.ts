@@ -20,8 +20,8 @@ import {
   ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
 import { AI_RATE_LIMIT } from '../config/rate-limits';
+import { SharedRateLimit } from '../rate-limit/shared-rate-limit.decorator';
 import { ACCESS_TOKEN_COOKIE } from '../auth/auth.constants';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
@@ -75,7 +75,7 @@ export class JobApplicationsController {
     return this.jobApplicationsService.update(currentUser.id, id, updateDto);
   }
 
-  @Throttle({ default: AI_RATE_LIMIT })
+  @SharedRateLimit('ai:cv-match', AI_RATE_LIMIT)
   @Post(':id/cv-match')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: JobApplicationResponseDto })

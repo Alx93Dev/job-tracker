@@ -12,6 +12,7 @@ import { HealthModule } from './health/health.module';
 import { JobApplicationsModule } from './job-applications/job-applications.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { ProfileModule } from './profile/profile.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { ProfileModule } from './profile/profile.module';
     ThrottlerModule.forRoot([{ name: 'default', ...GLOBAL_RATE_LIMIT }]),
     ScheduleModule.forRoot(),
     PrismaModule,
+    RateLimitModule,
     AuthModule,
     JobApplicationsModule,
     ProfileModule,

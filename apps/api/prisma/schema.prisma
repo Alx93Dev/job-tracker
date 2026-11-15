@@ -95,3 +95,13 @@ model Notification {
 
   @@index([userId, readAt])
 }
+
+/// Fixed-window request counters shared by every API instance. The key holds a hash of the
+/// client IP, never the IP itself.
+model RateLimitBucket {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+
+  @@index([windowStart])
+}
