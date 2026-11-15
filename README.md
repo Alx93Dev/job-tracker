@@ -146,7 +146,7 @@ Browser ──► web project (Next.js) ──rewrite /api/*──► api projec
                                      Vercel Cron Job ─────┘ GET /api/cron/follow-up-reminders (daily)
 ```
 
-- **API project** (Root Directory `apps/api`): NestJS runs as a single Vercel Function. `apps/api/vercel.json` sets the build command (`scripts/vercel-build.mjs`) and a daily cron job. **Production** builds apply pending migrations and refresh the demo account; **preview** builds never touch the database.
+- **API project** (Root Directory `apps/api`): NestJS runs as a single Vercel Function. `apps/api/vercel.json` sets the build command (`scripts/vercel-build.mjs`) and the daily cron jobs. The build always regenerates the Prisma client (Vercel's build cache skips `postinstall`) and compiles **before** touching the database, so a failed build never migrates production. **Production** builds then apply pending migrations and refresh the demo account; **preview** builds never touch the database.
 - **Web project** (Root Directory `apps/web`): standard Next.js. `API_PROXY_TARGET` points at the API project's production URL, so the browser only talks to the web domain and the auth cookies stay first-party.
 - **Reminders:** serverless instances are frozen between requests, so on Vercel (`VERCEL=1`) the in-process scheduler is off and the Vercel Cron Job calls `/api/cron/follow-up-reminders` with `Authorization: Bearer <CRON_SECRET>`. On the Hobby plan cron jobs run once a day, within the scheduled hour.
 
