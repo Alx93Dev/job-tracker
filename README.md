@@ -234,7 +234,7 @@ Every endpoint except register, login, demo, refresh and logout requires a sessi
 - **Short-lived access token (15 min) + rotating refresh token (7 days).** Refresh tokens are random, single use and stored only as SHA-256 hashes. Reusing an already rotated token is treated as theft and revokes every session of that user.
 - **One shared refresh on the client.** When several requests get a `401` at once, they wait for a single refresh call and retry, instead of racing and triggering reuse detection.
 - **Argon2id** for passwords, plus a dummy hash check for unknown emails so login timing does not reveal which emails are registered. Wrong email and wrong password return the same message.
-- **Rate limiting:** 5 requests per minute per IP on register, login and demo; 120 per minute elsewhere.
+- **Rate limiting shared by every instance:** 5 requests per minute per IP on register, login and demo, and 10 on the AI endpoints. Counters live in PostgreSQL (one atomic upsert per request, fixed window, only a SHA-256 hash of the IP is stored), because serverless platforms run several API instances at once and in-memory counters would let each instance count on its own. A `Retry-After` header tells clients when to try again, and a daily cron job deletes old counters. Other routes keep a lighter in-memory limit of 120 requests per minute.
 - **No open redirects:** the `?next=` page after login only accepts same-site relative paths.
 - **Middleware is a UX hint, the API is the gate.** Next.js middleware only checks that a session cookie exists to avoid flashing protected pages; the API validates the token on every request.
 

@@ -2,6 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { EnvironmentVariables } from '../config/environment.validation';
 import { CronController } from './cron.controller';
+import type { RateLimitService } from '../rate-limit/rate-limit.service';
 import type { FollowUpReminderService } from './follow-up-reminder.service';
 
 const cronSecret = 'a-cron-secret-of-enough-length';
@@ -10,6 +11,7 @@ function buildController(configuredSecret: string | undefined) {
   const createDueReminders = jest.fn().mockResolvedValue(3);
   const cronController = new CronController(
     { createDueReminders } as unknown as FollowUpReminderService,
+    { deleteExpiredBuckets: jest.fn().mockResolvedValue(7) } as unknown as RateLimitService,
     { get: () => configuredSecret } as unknown as ConfigService<EnvironmentVariables, true>,
   );
   return { cronController, createDueReminders };
@@ -44,5 +46,16 @@ describe('CronController', () => {
     await expect(cronController.createFollowUpReminders('Bearer undefined')).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it('cleans expired rate limit buckets with the right secret only', async () => {
+    const { cronController } = buildController(cronSecret);
+
+    await expect(
+      cronController.deleteExpiredRateLimitBuckets(`Bearer ${cronSecret}`),
+    ).resolves.toEqual({ deletedBuckets: 7 });
+    await expect(
+      cronController.deleteExpiredRateLimitBuckets('Bearer wrong'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

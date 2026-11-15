@@ -5,6 +5,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { timingSafeEqual } from 'node:crypto';
 import { Public } from '../auth/decorators/public.decorator';
 import type { EnvironmentVariables } from '../config/environment.validation';
+import { RateLimitService } from '../rate-limit/rate-limit.service';
 import { FollowUpReminderService } from './follow-up-reminder.service';
 import { CRON_AUTHORIZATION_SCHEME } from './notifications.constants';
 
@@ -29,6 +30,7 @@ function isSameSecret(received: string, expected: string): boolean {
 export class CronController {
   constructor(
     private readonly followUpReminderService: FollowUpReminderService,
+    private readonly rateLimitService: RateLimitService,
     private readonly configService: ConfigService<EnvironmentVariables, true>,
   ) {}
 
@@ -36,15 +38,26 @@ export class CronController {
   async createFollowUpReminders(
     @Headers('authorization') authorization?: string,
   ): Promise<{ createdReminders: number }> {
+    this.assertCronSecret(authorization);
+    return {
+      createdReminders: await this.followUpReminderService.createDueReminders(new Date()),
+    };
+  }
+
+  @Get('rate-limit-cleanup')
+  async deleteExpiredRateLimitBuckets(
+    @Headers('authorization') authorization?: string,
+  ): Promise<{ deletedBuckets: number }> {
+    this.assertCronSecret(authorization);
+    return { deletedBuckets: await this.rateLimitService.deleteExpiredBuckets(new Date()) };
+  }
+
+  private assertCronSecret(authorization?: string): void {
     const cronSecret = this.configService.get('CRON_SECRET', { infer: true });
     const expectedAuthorization = `${CRON_AUTHORIZATION_SCHEME} ${cronSecret}`;
 
     if (!cronSecret || !authorization || !isSameSecret(authorization, expectedAuthorization)) {
       throw new UnauthorizedException();
     }
-
-    return {
-      createdReminders: await this.followUpReminderService.createDueReminders(new Date()),
-    };
   }
 }
