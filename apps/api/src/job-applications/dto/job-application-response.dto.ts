@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ApplicationStatus } from '@prisma/client';
+import { CvMatchResponseDto } from '../../ai/dto/cv-match-response.dto';
 
 export class JobApplicationResponseDto {
   @ApiProperty()
@@ -28,6 +29,15 @@ export class JobApplicationResponseDto {
 
   @ApiPropertyOptional({ nullable: true, type: String })
   notes!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  jobDescription!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: CvMatchResponseDto })
+  cvMatch!: CvMatchResponseDto | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Date })
+  cvMatchedAt!: Date | null;
 
   @ApiProperty()
   createdAt!: Date;

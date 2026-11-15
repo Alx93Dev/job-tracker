@@ -19,6 +19,7 @@ import {
   JWT_SECRET_MIN_LENGTH,
   MAX_PORT,
 } from './app.constants';
+import { DEFAULT_CLAUDE_MODEL } from '../ai/ai.constants';
 
 function parseBooleanFlag(rawValue: unknown): boolean {
   return rawValue === true || rawValue === 'true';
@@ -63,6 +64,16 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsEmail()
   DEMO_USER_EMAIL?: string;
+
+  // An empty value (as copied from .env.example) means "AI disabled", not a startup error.
+  @Transform(({ obj }: { obj: Record<string, unknown> }) => obj.ANTHROPIC_API_KEY || undefined)
+  @IsOptional()
+  @IsString()
+  ANTHROPIC_API_KEY?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  ANTHROPIC_MODEL: string = DEFAULT_CLAUDE_MODEL;
 }
 
 export function validateEnvironment(rawConfig: Record<string, unknown>): EnvironmentVariables {

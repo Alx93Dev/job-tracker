@@ -1,9 +1,11 @@
 import { Prisma } from '@prisma/client';
+import { AI_INPUT_LIMITS } from '../ai/ai.constants';
 
 export const JOB_APPLICATION_LIMITS = {
   shortTextMaxLength: 120,
   urlMaxLength: 2048,
   notesMaxLength: 5000,
+  jobDescriptionMaxLength: AI_INPUT_LIMITS.jobPostingMaxLength,
 } as const;
 
 export const SEARCHABLE_FIELDS = ['companyName', 'positionTitle', 'location'] as const;
@@ -18,6 +20,15 @@ export const jobApplicationResponseSelect = {
   status: true,
   appliedAt: true,
   notes: true,
+  jobDescription: true,
+  cvMatch: true,
+  cvMatchedAt: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.JobApplicationSelect;
+
+export const CV_MATCH_ERROR_MESSAGES = {
+  missingJobDescription:
+    'Add the job description to this application before comparing it with your CV',
+  missingCv: 'Add your CV in your profile before comparing it with a job',
+} as const;

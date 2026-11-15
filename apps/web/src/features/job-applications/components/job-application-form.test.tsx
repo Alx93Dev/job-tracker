@@ -36,7 +36,7 @@ describe('JobApplicationForm', () => {
         companyName: 'Acme',
         positionTitle: 'Frontend Developer',
         status: 'APPLIED',
-        jobUrl: undefined,
+        jobUrl: null,
       }),
     );
   });

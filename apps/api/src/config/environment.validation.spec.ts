@@ -26,6 +26,13 @@ describe('validateEnvironment', () => {
     expect(environment.REFRESH_TOKEN_TTL_DAYS).toBe(7);
   });
 
+  it('treats an empty ANTHROPIC_API_KEY as AI disabled and defaults the model', () => {
+    const environment = validateEnvironment({ ...requiredVariables, ANTHROPIC_API_KEY: '' });
+
+    expect(environment.ANTHROPIC_API_KEY).toBeUndefined();
+    expect(environment.ANTHROPIC_MODEL).toBe('claude-opus-5-5');
+  });
+
   it('rejects a JWT secret that is too short', () => {
     expect(() => validateEnvironment({ ...requiredVariables, JWT_ACCESS_SECRET: 'short' })).toThrow(
       /JWT_ACCESS_SECRET/,

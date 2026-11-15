@@ -31,7 +31,7 @@ describe('jobApplicationFormSchema', () => {
 });
 
 describe('toPayload', () => {
-  it('omits optional fields left empty', () => {
+  it('sends null for optional fields left empty so editing can clear them', () => {
     const payload = toPayload({
       ...emptyJobApplicationFormValues,
       companyName: 'Acme',
@@ -42,11 +42,12 @@ describe('toPayload', () => {
       companyName: 'Acme',
       positionTitle: 'Frontend Developer',
       status: 'WISHLIST',
-      jobUrl: undefined,
-      location: undefined,
-      salaryRange: undefined,
-      appliedAt: undefined,
-      notes: undefined,
+      jobUrl: null,
+      location: null,
+      salaryRange: null,
+      appliedAt: null,
+      notes: null,
+      jobDescription: null,
     });
   });
 });
@@ -63,6 +64,9 @@ describe('toFormValues', () => {
       status: 'APPLIED',
       appliedAt: '2026-11-03T00:00:00.000Z',
       notes: null,
+      jobDescription: null,
+      cvMatch: null,
+      cvMatchedAt: null,
       createdAt: '2026-11-03T00:00:00.000Z',
       updatedAt: '2026-11-03T00:00:00.000Z',
     };

@@ -91,6 +91,22 @@ export function JobApplicationForm({
         <textarea {...register('notes')} rows={4} className={INPUT_CLASS_NAME} />
       </label>
 
+      <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2">
+        Job description
+        <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+          The full posting text. Used to compare the job with your CV.
+        </span>
+        <textarea
+          {...register('jobDescription')}
+          rows={6}
+          aria-invalid={Boolean(errors.jobDescription)}
+          className={INPUT_CLASS_NAME}
+        />
+        {errors.jobDescription && (
+          <span className="text-xs font-normal text-rose-600">{errors.jobDescription.message}</span>
+        )}
+      </label>
+
       {submitErrorMessage && (
         <p role="alert" className="text-sm text-rose-600 sm:col-span-2">
           {submitErrorMessage}
