@@ -11,8 +11,6 @@ export const AI_INPUT_LIMITS = {
 
 export const MATCH_SCORE_RANGE = { min: 0, max: 100 } as const;
 
-export const AI_RATE_LIMIT = { limit: 10, ttl: 60_000 } as const;
-
 export const AI_ERROR_MESSAGES = {
   notConfigured: 'AI features are not configured on this server',
   providerBusy: 'The AI service is busy. Please try again in a minute.',

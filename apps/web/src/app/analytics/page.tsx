@@ -16,7 +16,7 @@ export default function AnalyticsPage() {
       </div>
       {summaryQuery.isPending && <p aria-live="polite">Loading metrics…</p>}
       {summaryQuery.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           Could not load your metrics: {summaryQuery.error.message}
         </p>
       )}

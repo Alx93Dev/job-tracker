@@ -16,6 +16,7 @@ async function bootstrap(): Promise<void> {
   // The web app proxies /api through Next.js, so the client IP used for rate limiting
   // comes from X-Forwarded-For and only the configured number of proxy hops is trusted.
   app.set('trust proxy', configService.get('TRUSTED_PROXY_HOPS', { infer: true }));
+  app.enableShutdownHooks();
   app.use(cookieParser());
   app.setGlobalPrefix(API_GLOBAL_PREFIX);
   app.enableCors({

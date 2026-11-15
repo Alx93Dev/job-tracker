@@ -101,7 +101,7 @@ export function NotificationsMenu() {
             )}
           </div>
           {notifications.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-slate-500">
+            <p className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
               No notifications yet. Follow-up reminders will show up here.
             </p>
           ) : (
@@ -114,12 +114,15 @@ export function NotificationsMenu() {
                     className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     <span
-                      className={`text-sm ${notification.readAt ? 'text-slate-500' : 'font-medium'}`}
+                      className={`text-sm ${notification.readAt ? 'text-slate-500 dark:text-slate-400' : 'font-medium'}`}
                     >
                       {!notification.readAt && <span className="sr-only">Unread: </span>}
                       {notification.message}
                     </span>
-                    <time dateTime={notification.createdAt} className="text-xs text-slate-500">
+                    <time
+                      dateTime={notification.createdAt}
+                      className="text-xs text-slate-500 dark:text-slate-400"
+                    >
                       {createdAtFormatter.format(new Date(notification.createdAt))}
                     </time>
                   </button>

@@ -21,7 +21,7 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { AI_RATE_LIMIT } from '../ai/ai.constants';
+import { AI_RATE_LIMIT } from '../config/rate-limits';
 import { ACCESS_TOKEN_COOKIE } from '../auth/auth.constants';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';

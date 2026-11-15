@@ -12,7 +12,9 @@ FROM node:24-alpine
 RUN apk add --no-cache openssl
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --from=build /app /app
+COPY --from=build --chown=node:node /app /app
 WORKDIR /app/apps/api
+USER node
 EXPOSE 4000
+# Pending migrations are applied on every start; `migrate deploy` never resets data.
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main"]

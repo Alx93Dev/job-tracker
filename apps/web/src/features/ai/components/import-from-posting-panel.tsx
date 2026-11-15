@@ -66,7 +66,7 @@ export function ImportFromPostingPanel({ onImported }: ImportFromPostingPanelPro
         </p>
       </div>
       {extractMutation.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           {extractMutation.error.message}
         </p>
       )}

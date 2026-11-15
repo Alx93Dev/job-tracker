@@ -61,7 +61,7 @@ export function RegisterForm() {
         required
       />
       {registerMutation.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           {registerMutation.error.message}
         </p>
       )}

@@ -8,7 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { ACCESS_TOKEN_COOKIE } from '../auth/auth.constants';
-import { AI_RATE_LIMIT } from './ai.constants';
+import { AI_RATE_LIMIT } from '../config/rate-limits';
 import { AiService } from './ai.service';
 import { ExtractJobPostingDto } from './dto/extract-job-posting.dto';
 import { ExtractedJobPostingResponseDto } from './dto/extracted-job-posting-response.dto';

@@ -21,7 +21,7 @@ export default function EditJobApplicationPage({ params }: { params: Promise<{ i
       <h1 className="text-2xl font-bold">Edit application</h1>
       {jobApplicationQuery.isPending && <p aria-live="polite">Loading…</p>}
       {jobApplicationQuery.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           Could not load the application: {jobApplicationQuery.error.message}
         </p>
       )}

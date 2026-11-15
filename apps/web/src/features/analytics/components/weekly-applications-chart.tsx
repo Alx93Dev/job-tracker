@@ -58,7 +58,7 @@ export function WeeklyApplicationsChart({ weeks }: WeeklyApplicationsChartProps)
       {isTableVisible ? (
         <table id={tableId} className="w-full text-sm">
           <thead>
-            <tr className="text-left text-slate-500">
+            <tr className="text-left text-slate-500 dark:text-slate-400">
               <th className="py-1 font-medium">Week of</th>
               <th className="py-1 text-right font-medium">Applications</th>
             </tr>
@@ -75,7 +75,7 @@ export function WeeklyApplicationsChart({ weeks }: WeeklyApplicationsChartProps)
       ) : (
         <div className="grid grid-cols-[1.5rem_1fr] gap-x-2" aria-hidden="true">
           <div
-            className="relative text-right text-xs text-slate-500 tabular-nums"
+            className="relative text-right text-xs text-slate-500 dark:text-slate-400 tabular-nums"
             style={{ height: CHART_HEIGHT_PX }}
           >
             {yTicks.map((tick) => (
@@ -126,7 +126,7 @@ export function WeeklyApplicationsChart({ weeks }: WeeklyApplicationsChartProps)
                 className={`pointer-events-none absolute -top-2 z-10 -translate-y-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs whitespace-nowrap shadow dark:border-slate-700 dark:bg-slate-900 ${tooltipAlignmentClass(hoveredWeekIndex, weeks.length)}`}
                 style={{ left: `${((hoveredWeekIndex + 0.5) / weeks.length) * 100}%` }}
               >
-                <span className="text-slate-500">
+                <span className="text-slate-500 dark:text-slate-400">
                   Week of {formatWeekLabel(hoveredWeek.weekStart)}
                 </span>
                 <span className="ml-2 font-medium">{pluralizeApplications(hoveredWeek.count)}</span>
@@ -135,7 +135,7 @@ export function WeeklyApplicationsChart({ weeks }: WeeklyApplicationsChartProps)
           </div>
 
           <div />
-          <div className="mt-1 flex gap-[2px] text-xs text-slate-500">
+          <div className="mt-1 flex gap-[2px] text-xs text-slate-500 dark:text-slate-400">
             {weeks.map((week, weekIndex) => (
               <span key={week.weekStart} className="flex-1 text-center whitespace-nowrap">
                 {isLabelledWeek(weekIndex, weeks.length) ? formatWeekLabel(week.weekStart) : ''}

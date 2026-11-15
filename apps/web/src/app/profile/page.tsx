@@ -17,7 +17,7 @@ export default function ProfilePage() {
       </div>
       {cvProfileQuery.isPending && <p aria-live="polite">Loading…</p>}
       {cvProfileQuery.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           Could not load your CV: {cvProfileQuery.error.message}
         </p>
       )}

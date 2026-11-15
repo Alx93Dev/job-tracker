@@ -5,9 +5,10 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AiModule } from './ai/ai.module';
 import { AnalyticsModule } from './analytics/analytics.module';
-import { GLOBAL_RATE_LIMIT } from './auth/auth.constants';
 import { AuthModule } from './auth/auth.module';
 import { validateEnvironment } from './config/environment.validation';
+import { GLOBAL_RATE_LIMIT } from './config/rate-limits';
+import { HealthModule } from './health/health.module';
 import { JobApplicationsModule } from './job-applications/job-applications.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -25,6 +26,7 @@ import { ProfileModule } from './profile/profile.module';
     AiModule,
     NotificationsModule,
     AnalyticsModule,
+    HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -140,7 +140,7 @@ async function seed(): Promise<void> {
   const demoUserEmail = process.env.DEMO_USER_EMAIL ?? DEFAULT_DEMO_USER_EMAIL;
   const demoUser = await prisma.user.upsert({
     where: { email: demoUserEmail },
-    update: {},
+    update: { cvText: null, cvUpdatedAt: null },
     create: {
       email: demoUserEmail,
       name: DEMO_USER_NAME,

@@ -39,7 +39,7 @@ export function CvForm({ cvProfile }: { cvProfile: CvProfile }) {
         aria-describedby={counterId}
         className={`${INPUT_CLASS_NAME} font-mono text-xs leading-relaxed`}
       />
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
         <span id={counterId}>
           {cvText.length.toLocaleString()} / {AI_INPUT_LIMITS.cvMaxLength.toLocaleString()}{' '}
           characters
@@ -66,7 +66,7 @@ export function CvForm({ cvProfile }: { cvProfile: CvProfile }) {
         </p>
       </div>
       {updateCvMutation.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           {updateCvMutation.error.message}
         </p>
       )}

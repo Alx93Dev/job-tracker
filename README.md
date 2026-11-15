@@ -2,7 +2,11 @@
 
 Full-stack app to track job applications from wishlist to offer. Built as a portfolio project to practise a modern React + NestJS stack end to end.
 
-> **Status:** Phase 5 of 6 — Reminders & analytics. See the [roadmap](#roadmap).
+> **Status:** all six phases built and tested; public deployment pending. See the [roadmap](#roadmap).
+
+| Board                                                                         | Analytics                                                                             |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| ![Kanban board with applications in five columns](docs/screenshots/board.png) | ![Analytics page with rates, weekly chart and funnel](docs/screenshots/analytics.png) |
 
 ## Features
 
@@ -31,8 +35,8 @@ Full-stack app to track job applications from wishlist to offer. Built as a port
 | AI       | Claude API (Claude Opus 5.5) via the Anthropic TypeScript SDK, structured outputs validated with Zod |
 | Auth     | JWT in httpOnly cookies, rotating refresh tokens, Argon2id, @nestjs/throttler                        |
 | Database | PostgreSQL 17 + Prisma 6                                                                             |
-| Testing  | Vitest + Testing Library (web), Jest (api)                                                           |
-| Tooling  | pnpm workspaces, ESLint, Prettier, Docker Compose, GitHub Actions                                    |
+| Testing  | Vitest + Testing Library (web), Jest (api), Playwright + axe-core (end to end and accessibility)     |
+| Tooling  | pnpm workspaces, ESLint, Prettier, Docker, Docker Compose, GitHub Actions                            |
 
 ## Architecture
 
@@ -88,13 +92,68 @@ pnpm dev            # web on :3000, api on :4000
 
 ### Useful scripts
 
-| Command          | Description                   |
-| ---------------- | ----------------------------- |
-| `pnpm dev`       | Run web and api in watch mode |
-| `pnpm test`      | Run all unit tests            |
-| `pnpm lint`      | Lint both apps                |
-| `pnpm typecheck` | Type-check both apps          |
-| `pnpm build`     | Production build of both apps |
+| Command          | Description                                |
+| ---------------- | ------------------------------------------ |
+| `pnpm dev`       | Run web and api in watch mode              |
+| `pnpm test`      | Run all unit tests                         |
+| `pnpm lint`      | Lint both apps                             |
+| `pnpm typecheck` | Type-check both apps                       |
+| `pnpm build`     | Production build of both apps              |
+| `pnpm test:e2e`  | End-to-end tests (see [Testing](#testing)) |
+
+## Testing
+
+| Layer         | Tool                     | What it covers                                                                                                                 |
+| ------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Unit (API)    | Jest                     | Services, guards, token rotation, lifecycle rules, analytics, reminder job, env validation                                     |
+| Unit (web)    | Vitest + Testing Library | Forms, hooks, optimistic updates, API client refresh, components                                                               |
+| End to end    | Playwright               | Sign up / log in / log out, keyboard drag and drop, search, follow-up badges, AI import and CV match, analytics, notifications |
+| Accessibility | axe-core in Playwright   | WCAG 2.1 AA on every page, in light and dark mode                                                                              |
+
+The end-to-end suite runs the production builds of both apps against a real PostgreSQL and a local stand-in for the Claude API, so it never calls (or pays for) the real model. It needs a throwaway database:
+
+```bash
+pnpm build
+pnpm --filter web exec playwright install chromium
+E2E_DATABASE_URL=postgresql://jobtracker:jobtracker@localhost:5432/jobtracker_e2e pnpm test:e2e
+```
+
+In CI it runs on every pull request with a PostgreSQL service container. `CAPTURE_SCREENSHOTS=1 pnpm test:e2e screenshots` regenerates the README screenshots.
+
+### Lighthouse
+
+Production build, measured locally (median of three runs):
+
+| Page      | Performance (mobile) | Performance (desktop) | Accessibility | Best practices | SEO |
+| --------- | -------------------- | --------------------- | ------------- | -------------- | --- |
+| Login     | 97                   | 100                   | 100           | 100            | 100 |
+| Board     | 85                   | 100                   | 100           | 100            | —   |
+| Analytics | 90                   | 100                   | 100           | 100            | —   |
+
+Signed-in pages are excluded from indexing on purpose (`robots.txt`), so their SEO score is not meaningful. On the mobile profile the board's remaining cost is React hydration and drag-and-drop measuring the columns.
+
+## Deployment
+
+Both apps ship as Docker images (built in CI on every pull request):
+
+- **API** (`apps/api/Dockerfile`): applies pending migrations on start (`prisma migrate deploy`, never destructive), runs as a non-root user and exposes `GET /api/health` for the platform's health check.
+- **Web** (`apps/web/Dockerfile`): Next.js standalone server, non-root. `API_PROXY_TARGET` is a **build argument** because Next.js bakes rewrites into the build: set it to the address at which the web container reaches the API.
+
+Run the whole stack locally with `docker compose --profile full up --build`.
+
+**Production settings for the API**
+
+| Variable             | Value                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`       | Managed PostgreSQL connection string                                                                                                 |
+| `JWT_ACCESS_SECRET`  | Random, at least 32 characters                                                                                                       |
+| `COOKIE_SECURE`      | `true` (HTTPS only)                                                                                                                  |
+| `CORS_ORIGIN`        | Public URL of the web app                                                                                                            |
+| `TRUSTED_PROXY_HOPS` | Proxies in front of the API: Next.js plus the platform's load balancer, usually `2`. Needed so rate limiting sees the real client IP |
+| `DEMO_USER_EMAIL`    | Enables **Try the demo**; run `pnpm db:seed` once against the production database                                                    |
+| `ANTHROPIC_API_KEY`  | Optional; without it the AI features answer 503                                                                                      |
+
+The demo account is shared by every visitor, so re-running the seed resets its applications and CV.
 
 ## API
 
@@ -170,4 +229,5 @@ Every endpoint except register, login, demo, refresh and logout requires a sessi
 - [x] **Phase 3 — Auth:** sign-up / login, per-user data, demo account
 - [x] **Phase 4 — AI:** extract fields from a job posting, match it against your CV
 - [x] **Phase 5 — Reminders & analytics:** follow-up jobs, response-rate dashboard
-- [ ] **Phase 6 — Polish:** Playwright E2E, Lighthouse > 90, deployment
+- [x] **Phase 6 — Polish:** Playwright E2E with axe accessibility checks, Lighthouse audit and fixes, production Docker images, health check
+- [ ] **Public deployment** with the demo URL in the repository description

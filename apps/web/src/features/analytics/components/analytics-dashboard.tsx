@@ -31,9 +31,9 @@ function Panel({
 export function AnalyticsDashboard({ summary }: { summary: AnalyticsSummary }) {
   if (summary.totalApplications === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700">
+      <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:text-slate-400 dark:border-slate-700">
         No data yet.{' '}
-        <Link href="/applications/new" className="text-blue-600 hover:underline">
+        <Link href="/applications/new" className="text-blue-600 dark:text-blue-400 hover:underline">
           Add your first application
         </Link>{' '}
         to see your search metrics.

@@ -8,7 +8,8 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
-import { AUTH_RATE_LIMIT, REFRESH_TOKEN_COOKIE } from './auth.constants';
+import { AUTH_RATE_LIMIT } from '../config/rate-limits';
+import { REFRESH_TOKEN_COOKIE } from './auth.constants';
 import { AuthCookieService } from './auth-cookie.service';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
