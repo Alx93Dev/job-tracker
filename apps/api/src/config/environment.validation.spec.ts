@@ -33,6 +33,15 @@ describe('validateEnvironment', () => {
     expect(environment.ANTHROPIC_MODEL).toBe('claude-opus-5-5');
   });
 
+  it('treats an empty CRON_SECRET as not configured and rejects a short one', () => {
+    expect(
+      validateEnvironment({ ...requiredVariables, CRON_SECRET: '' }).CRON_SECRET,
+    ).toBeUndefined();
+    expect(() => validateEnvironment({ ...requiredVariables, CRON_SECRET: 'short' })).toThrow(
+      /CRON_SECRET/,
+    );
+  });
+
   it('rejects a JWT secret that is too short', () => {
     expect(() => validateEnvironment({ ...requiredVariables, JWT_ACCESS_SECRET: 'short' })).toThrow(
       /JWT_ACCESS_SECRET/,

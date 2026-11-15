@@ -7,6 +7,7 @@ export const DEFAULT_PORT = 4000;
 export const MAX_PORT = 65535;
 
 export const JWT_SECRET_MIN_LENGTH = 32;
+export const CRON_SECRET_MIN_LENGTH = 16;
 export const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 export const DEFAULT_REFRESH_TOKEN_TTL_DAYS = 7;
 export const DEFAULT_TRUSTED_PROXY_HOPS = 1;

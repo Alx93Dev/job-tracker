@@ -7,6 +7,7 @@ import {
   FOLLOW_UP_REMINDER_STATUSES,
   FOLLOW_UP_SCAN_CRON,
   FOLLOW_UP_SCAN_JOB_NAME,
+  IS_IN_PROCESS_SCHEDULER_DISABLED,
 } from './notifications.constants';
 
 @Injectable()
@@ -15,7 +16,11 @@ export class FollowUpReminderService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  @Cron(FOLLOW_UP_SCAN_CRON, { name: FOLLOW_UP_SCAN_JOB_NAME, timeZone: 'UTC' })
+  @Cron(FOLLOW_UP_SCAN_CRON, {
+    name: FOLLOW_UP_SCAN_JOB_NAME,
+    timeZone: 'UTC',
+    disabled: IS_IN_PROCESS_SCHEDULER_DISABLED,
+  })
   async runScheduledScan(): Promise<void> {
     const createdCount = await this.createDueReminders(new Date());
     if (createdCount > 0) {
