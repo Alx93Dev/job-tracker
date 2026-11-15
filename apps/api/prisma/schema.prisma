@@ -26,6 +26,7 @@ model User {
   updatedAt       DateTime         @updatedAt
   jobApplications JobApplication[]
   refreshTokens   RefreshToken[]
+  notifications   Notification[]
 }
 
 model RefreshToken {
@@ -41,22 +42,56 @@ model RefreshToken {
 }
 
 model JobApplication {
-  id             String            @id @default(uuid())
-  userId         String
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyName    String
-  positionTitle  String
-  jobUrl         String?
-  location       String?
-  salaryRange    String?
-  status         ApplicationStatus @default(WISHLIST)
-  appliedAt      DateTime?
-  notes          String?
-  jobDescription String?
-  cvMatch        Json?
-  cvMatchedAt    DateTime?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id                 String            @id @default(uuid())
+  userId             String
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName        String
+  positionTitle      String
+  jobUrl             String?
+  location           String?
+  salaryRange        String?
+  status             ApplicationStatus @default(WISHLIST)
+  appliedAt          DateTime?
+  notes              String?
+  jobDescription     String?
+  cvMatch            Json?
+  cvMatchedAt        DateTime?
+  followUpAt         DateTime?
+  followUpNotifiedAt DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  statusChanges      StatusChange[]
+  notifications      Notification[]
 
   @@index([userId, status])
+  @@index([followUpAt])
+}
+
+enum NotificationType {
+  FOLLOW_UP_DUE
+}
+
+model StatusChange {
+  id               String             @id @default(uuid())
+  jobApplicationId String
+  jobApplication   JobApplication     @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+  fromStatus       ApplicationStatus?
+  toStatus         ApplicationStatus
+  changedAt        DateTime           @default(now())
+
+  @@index([jobApplicationId, changedAt])
+}
+
+model Notification {
+  id               String           @id @default(uuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobApplicationId String?
+  jobApplication   JobApplication?  @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+  type             NotificationType
+  message          String
+  readAt           DateTime?
+  createdAt        DateTime         @default(now())
+
+  @@index([userId, readAt])
 }

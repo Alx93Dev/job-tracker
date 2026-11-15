@@ -4,6 +4,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import Link from 'next/link';
 import type { JobApplication } from '../../types/job-application';
+import { FollowUpBadge } from '../follow-up-badge';
 
 interface KanbanCardProps {
   jobApplication: JobApplication;
@@ -39,6 +40,9 @@ export function KanbanCardContent({ jobApplication }: KanbanCardProps) {
       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
         {[jobApplication.companyName, jobApplication.location].filter(Boolean).join(' · ')}
       </p>
+      <div className="mt-1.5">
+        <FollowUpBadge jobApplication={jobApplication} />
+      </div>
       <Link
         href={`/applications/${jobApplication.id}/edit`}
         onPointerDown={(event) => event.stopPropagation()}

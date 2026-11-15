@@ -8,6 +8,9 @@ export const JOB_APPLICATION_LIMITS = {
   jobDescriptionMaxLength: AI_INPUT_LIMITS.jobPostingMaxLength,
 } as const;
 
+export const FOLLOW_UP_DELAY_DAYS = 7;
+export const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export const SEARCHABLE_FIELDS = ['companyName', 'positionTitle', 'location'] as const;
 
 export const jobApplicationResponseSelect = {
@@ -23,6 +26,7 @@ export const jobApplicationResponseSelect = {
   jobDescription: true,
   cvMatch: true,
   cvMatchedAt: true,
+  followUpAt: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.JobApplicationSelect;

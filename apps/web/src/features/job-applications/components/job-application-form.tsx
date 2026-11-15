@@ -74,6 +74,12 @@ export function JobApplicationForm({
         registration={register('appliedAt')}
         error={errors.appliedAt}
       />
+      <FormField
+        label="Follow up on"
+        type="date"
+        registration={register('followUpAt')}
+        error={errors.followUpAt}
+      />
 
       <label className="flex flex-col gap-1.5 text-sm font-medium">
         Status

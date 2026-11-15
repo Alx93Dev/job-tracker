@@ -46,6 +46,7 @@ describe('toPayload', () => {
       location: null,
       salaryRange: null,
       appliedAt: null,
+      followUpAt: null,
       notes: null,
       jobDescription: null,
     });
@@ -67,6 +68,7 @@ describe('toFormValues', () => {
       jobDescription: null,
       cvMatch: null,
       cvMatchedAt: null,
+      followUpAt: '2026-11-10T00:00:00.000Z',
       createdAt: '2026-11-03T00:00:00.000Z',
       updatedAt: '2026-11-03T00:00:00.000Z',
     };
@@ -75,6 +77,7 @@ describe('toFormValues', () => {
       jobUrl: '',
       location: '',
       appliedAt: '2026-11-03',
+      followUpAt: '2026-11-10',
       status: 'APPLIED',
     });
   });

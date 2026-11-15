@@ -8,6 +8,7 @@ export interface JobApplicationPayload {
   salaryRange?: string | null;
   status: ApplicationStatus;
   appliedAt?: string | null;
+  followUpAt?: string | null;
   notes?: string | null;
   jobDescription?: string | null;
 }

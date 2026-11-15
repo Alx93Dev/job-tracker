@@ -16,6 +16,7 @@ export function buildJobApplication(overrides: Partial<JobApplication> = {}): Jo
     jobDescription: null,
     cvMatch: null,
     cvMatchedAt: null,
+    followUpAt: null,
     createdAt: FIXTURE_TIMESTAMP,
     updatedAt: FIXTURE_TIMESTAMP,
     ...overrides,

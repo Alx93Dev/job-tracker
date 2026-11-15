@@ -6,6 +6,7 @@ import { CreateJobApplicationDto } from './dto/create-job-application.dto';
 import { JobApplicationResponseDto } from './dto/job-application-response.dto';
 import { ListJobApplicationsQueryDto } from './dto/list-job-applications-query.dto';
 import { UpdateJobApplicationDto } from './dto/update-job-application.dto';
+import { deriveLifecycleChanges } from './job-application-lifecycle';
 import { toJobApplicationResponse } from './job-application-response.mapper';
 import {
   CV_MATCH_ERROR_MESSAGES,
@@ -49,8 +50,14 @@ export class JobApplicationsService {
     userId: string,
     createDto: CreateJobApplicationDto,
   ): Promise<JobApplicationResponseDto> {
+    const { patch, statusChange } = deriveLifecycleChanges(null, createDto, new Date());
     const record = await this.prisma.jobApplication.create({
-      data: { ...createDto, userId },
+      data: {
+        ...createDto,
+        ...patch,
+        userId,
+        ...(statusChange && { statusChanges: { create: statusChange } }),
+      },
       select: jobApplicationResponseSelect,
     });
     return toJobApplicationResponse(record);
@@ -65,12 +72,15 @@ export class JobApplicationsService {
     const isJobDescriptionChanged =
       updateDto.jobDescription !== undefined &&
       updateDto.jobDescription !== currentRecord.jobDescription;
+    const { patch, statusChange } = deriveLifecycleChanges(currentRecord, updateDto, new Date());
 
     const record = await this.prisma.jobApplication.update({
       where: { id },
       data: {
         ...updateDto,
+        ...patch,
         ...(isJobDescriptionChanged && { cvMatch: Prisma.DbNull, cvMatchedAt: null }),
+        ...(statusChange && { statusChanges: { create: statusChange } }),
       },
       select: jobApplicationResponseSelect,
     });

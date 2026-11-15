@@ -52,6 +52,15 @@ export class CreateJobApplicationDto {
   @IsDateString()
   appliedAt?: string;
 
+  @ApiPropertyOptional({
+    example: '2026-11-10',
+    description: 'When to follow up. Defaults to a week after applying.',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDateString()
+  followUpAt?: string | null;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

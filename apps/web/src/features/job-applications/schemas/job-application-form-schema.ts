@@ -25,6 +25,7 @@ export const jobApplicationFormSchema = z.object({
   salaryRange: optionalShortText,
   status: z.enum(APPLICATION_STATUSES),
   appliedAt: z.string(),
+  followUpAt: z.string(),
   notes: z.string().trim().max(JOB_APPLICATION_LIMITS.notesMaxLength),
   jobDescription: z.string().trim().max(JOB_APPLICATION_LIMITS.jobDescriptionMaxLength),
 });
@@ -41,6 +42,7 @@ export const emptyJobApplicationFormValues: JobApplicationFormValues = {
   salaryRange: '',
   status: 'WISHLIST',
   appliedAt: '',
+  followUpAt: '',
   notes: '',
   jobDescription: '',
 };
@@ -54,6 +56,7 @@ export function toFormValues(jobApplication: JobApplication): JobApplicationForm
     salaryRange: jobApplication.salaryRange ?? '',
     status: jobApplication.status,
     appliedAt: jobApplication.appliedAt?.slice(0, ISO_DATE_LENGTH) ?? '',
+    followUpAt: jobApplication.followUpAt?.slice(0, ISO_DATE_LENGTH) ?? '',
     notes: jobApplication.notes ?? '',
     jobDescription: jobApplication.jobDescription ?? '',
   };
@@ -71,6 +74,7 @@ export function toPayload(formValues: JobApplicationFormValues): JobApplicationP
     salaryRange: emptyToNull(formValues.salaryRange),
     status: formValues.status,
     appliedAt: emptyToNull(formValues.appliedAt),
+    followUpAt: emptyToNull(formValues.followUpAt),
     notes: emptyToNull(formValues.notes),
     jobDescription: emptyToNull(formValues.jobDescription),
   };
