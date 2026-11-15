@@ -2,10 +2,12 @@
 
 Full-stack app to track job applications from wishlist to offer. Built as a portfolio project to practise a modern React + NestJS stack end to end.
 
-> **Status:** Phase 4 of 6 — AI features. See the [roadmap](#roadmap).
+> **Status:** Phase 5 of 6 — Reminders & analytics. See the [roadmap](#roadmap).
 
 ## Features
 
+- **📊 Analytics:** response, interview and offer rates, average time to first answer, a funnel, applications per week and where every application stands
+- **⏰ Follow-up reminders:** moving a card to Applied schedules a follow-up a week later; a background job turns due follow-ups into in-app notifications
 - **✨ Fill in from a job posting:** paste a posting and AI extracts company, position, location, salary, seniority and skills into the form
 - **✨ CV match:** compare an application with your CV and get a score, strengths, gaps and talking points for the cover letter or interview
 - **Accounts with secure sessions:** sign up, sign in and sign out; every user only sees their own applications
@@ -40,7 +42,7 @@ job-tracker/
 │   ├── web/                     Next.js client
 │   │   └── src/
 │   │       ├── app/             Routes (board/list, new, edit, login, register)
-│   │       ├── features/        Feature modules: ai, auth, job-applications, profile
+│   │       ├── features/        Feature modules: ai, analytics, auth, job-applications, notifications, profile
 │   │       ├── components/      Shared UI (form fields, theme toggle)
 │   │       ├── hooks/           Shared hooks (debounce)
 │   │       ├── lib/             HTTP client with session refresh, routes
@@ -49,8 +51,10 @@ job-tracker/
 │       ├── prisma/              Schema, migrations, seed
 │       └── src/
 │           ├── ai/              Claude client, prompts, Zod output schemas
+│           ├── analytics/       Metrics computed from the status history
 │           ├── auth/            Register, login, demo, refresh, logout, guards
 │           ├── config/          Env validation and constants
+│           ├── notifications/   Follow-up reminder job and notifications
 │           ├── prisma/          PrismaService (global module)
 │           ├── profile/         CV storage
 │           └── job-applications/ Controller, service, DTOs
@@ -111,6 +115,10 @@ pnpm dev            # web on :3000, api on :4000
 | POST   | `/api/ai/job-postings/extract`       | Extract structured data from a job posting |
 | GET    | `/api/profile/cv`                    | Get the current user's CV                  |
 | PUT    | `/api/profile/cv`                    | Save the current user's CV                 |
+| GET    | `/api/analytics/summary`             | Search metrics for the current user        |
+| GET    | `/api/notifications`                 | Latest notifications and unread count      |
+| POST   | `/api/notifications/:id/read`        | Mark one notification as read              |
+| POST   | `/api/notifications/read-all`        | Mark every notification as read            |
 
 Every endpoint except register, login, demo, refresh and logout requires a session. Job application endpoints only touch the current user's data and answer `404` for anyone else's, so ids cannot be probed.
 
@@ -147,11 +155,19 @@ Every endpoint except register, login, demo, refresh and logout requires a sessi
 - **Results are stored.** The CV match is saved on the application, so reopening it does not call (and pay for) the model again; it is cleared when the job description changes.
 - **Optional by design.** Without `ANTHROPIC_API_KEY` the AI endpoints answer `503` and the rest of the app keeps working.
 
+### Reminders and analytics
+
+- **Status history as the source of truth.** Every status change is stored as a `StatusChange` row, so metrics such as response rate or days to first answer come from what actually happened, not from the current status alone. The migration backfills one entry per existing application.
+- **Business rules in one pure function** (`deriveLifecycleChanges`): moving to Applied fills in today's date if missing and schedules a follow-up 7 days later (never in the past); Offer and Rejected cancel a pending follow-up; the user's own dates always win. It is unit-tested without a database.
+- **Background job with `@nestjs/schedule`.** An hourly cron turns due follow-ups into notifications. Each application is notified once (`followUpNotifiedAt` is set in the same transaction) and re-armed only when the user picks a new date. With several API instances this job would need a distributed lock or a queue.
+- **Honest metrics.** The first entry of a history (an application created directly as Rejected, or a backfilled row) is not counted as an answer when measuring response time. Rates are `null` instead of dividing by zero.
+- **Charts without a chart library.** The weekly chart and bar lists are plain HTML: one validated color for light and dark mode, thin rounded bars on a zero baseline, a recessive grid, hover tooltips that stay inside the chart, labels on every bar and a table view for screen readers and keyboard users.
+
 ## Roadmap
 
 - [x] **Phase 1 — Foundation:** monorepo, CRUD API, list and form UI, CI
 - [x] **Phase 2 — Kanban & UX:** drag-and-drop board, optimistic updates, search, dark mode toggle
 - [x] **Phase 3 — Auth:** sign-up / login, per-user data, demo account
 - [x] **Phase 4 — AI:** extract fields from a job posting, match it against your CV
-- [ ] **Phase 5 — Reminders & analytics:** follow-up jobs, response-rate dashboard
+- [x] **Phase 5 — Reminders & analytics:** follow-up jobs, response-rate dashboard
 - [ ] **Phase 6 — Polish:** Playwright E2E, Lighthouse > 90, deployment

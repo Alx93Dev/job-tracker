@@ -20,6 +20,7 @@ const storedApplication = {
   status: ApplicationStatus.APPLIED,
   appliedAt: new Date('2026-11-03'),
   notes: null,
+  followUpAt: null,
   jobDescription: 'We need React and TypeScript',
   cvMatch: null,
   cvMatchedAt: null,
@@ -96,7 +97,17 @@ describe('JobApplicationsService', () => {
 
     expect(jobApplicationRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { companyName: 'Acme', positionTitle: 'Dev', userId: ownerUserId },
+        data: {
+          companyName: 'Acme',
+          positionTitle: 'Dev',
+          userId: ownerUserId,
+          statusChanges: {
+            create: expect.objectContaining({
+              fromStatus: null,
+              toStatus: ApplicationStatus.WISHLIST,
+            }) as unknown,
+          },
+        },
       }),
     );
   });
@@ -237,7 +248,17 @@ describe('JobApplicationsService', () => {
       });
 
       expect(jobApplicationRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { status: ApplicationStatus.INTERVIEW } }),
+        expect.objectContaining({
+          data: {
+            status: ApplicationStatus.INTERVIEW,
+            statusChanges: {
+              create: expect.objectContaining({
+                fromStatus: ApplicationStatus.APPLIED,
+                toStatus: ApplicationStatus.INTERVIEW,
+              }) as unknown,
+            },
+          },
+        }),
       );
     });
 

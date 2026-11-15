@@ -39,6 +39,9 @@ export class JobApplicationResponseDto {
   @ApiPropertyOptional({ nullable: true, type: Date })
   cvMatchedAt!: Date | null;
 
+  @ApiPropertyOptional({ nullable: true, type: Date })
+  followUpAt!: Date | null;
+
   @ApiProperty()
   createdAt!: Date;
 

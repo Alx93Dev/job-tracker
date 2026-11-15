@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { JobApplication } from '../types/job-application';
+import { FollowUpBadge } from './follow-up-badge';
 import { StatusBadge } from './status-badge';
 
 interface JobApplicationListProps {
@@ -40,6 +41,7 @@ export function JobApplicationList({
               {appliedDateFormatter.format(new Date(jobApplication.appliedAt))}
             </time>
           )}
+          <FollowUpBadge jobApplication={jobApplication} />
           <StatusBadge status={jobApplication.status} />
           <div className="flex gap-2">
             <Link

@@ -14,6 +14,7 @@ export interface JobApplication {
   jobDescription: string | null;
   cvMatch: CvMatch | null;
   cvMatchedAt: string | null;
+  followUpAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
