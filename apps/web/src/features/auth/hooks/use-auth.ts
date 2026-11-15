@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { NEXT_PATH_QUERY_PARAM, ROUTES, toSafeNextPath } from '@/lib/routes';
 import { authApi } from '../api/auth-api';
 import type { LoginFormValues } from '../schemas/login-schema';
@@ -20,16 +20,18 @@ export function useCurrentUser(isEnabled = true) {
 /**
  * Every way of signing in ends the same way: drop data cached for any previous user,
  * remember the new one and continue to the page the visitor originally asked for.
+ * The `?next=` parameter is read only at that moment (instead of with useSearchParams),
+ * so the login and register pages can be fully rendered on the server.
  */
 function useStartSession() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   return (currentUser: CurrentUser) => {
+    const requestedPath = new URLSearchParams(window.location.search).get(NEXT_PATH_QUERY_PARAM);
     queryClient.clear();
     queryClient.setQueryData(currentUserKey, currentUser);
-    router.replace(toSafeNextPath(searchParams.get(NEXT_PATH_QUERY_PARAM)));
+    router.replace(toSafeNextPath(requestedPath));
     router.refresh();
   };
 }

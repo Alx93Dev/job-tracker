@@ -41,7 +41,7 @@ export function LoginForm() {
         required
       />
       {loginMutation.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           {loginMutation.error.message}
         </p>
       )}

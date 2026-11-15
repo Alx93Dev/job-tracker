@@ -19,7 +19,10 @@ export function AuthCard({ title, description, alternativeAction, children }: Au
 
       {children}
 
-      <div className="flex items-center gap-3 text-xs text-slate-500" aria-hidden="true">
+      <div
+        className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400"
+        aria-hidden="true"
+      >
         <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
         or
         <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
@@ -29,7 +32,10 @@ export function AuthCard({ title, description, alternativeAction, children }: Au
 
       <p className="text-center text-sm text-slate-500 dark:text-slate-400">
         {alternativeAction.prompt}{' '}
-        <Link href={alternativeAction.href} className="font-medium text-blue-600 hover:underline">
+        <Link
+          href={alternativeAction.href}
+          className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
+        >
           {alternativeAction.linkLabel}
         </Link>
       </p>

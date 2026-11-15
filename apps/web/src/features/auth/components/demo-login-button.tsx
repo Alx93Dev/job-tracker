@@ -17,7 +17,7 @@ export function DemoLoginButton() {
         {demoLoginMutation.isPending ? 'Opening demo…' : 'Try the demo — no sign-up'}
       </button>
       {demoLoginMutation.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           {demoLoginMutation.error.message}
         </p>
       )}

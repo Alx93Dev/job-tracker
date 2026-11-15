@@ -33,7 +33,10 @@ export function CvMatchPanel({ jobApplication }: CvMatchPanelProps) {
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Compare this job with{' '}
-            <Link href={ROUTES.profile} className="text-blue-600 hover:underline">
+            <Link
+              href={ROUTES.profile}
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
               your CV
             </Link>{' '}
             to see what fits, what is missing and what to highlight.
@@ -59,7 +62,7 @@ export function CvMatchPanel({ jobApplication }: CvMatchPanelProps) {
         </p>
       )}
       {cvMatchMutation.isError && (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           {cvMatchMutation.error.message}
         </p>
       )}
@@ -75,14 +78,14 @@ function CvMatchResult({ cvMatch, matchedAt }: { cvMatch: CvMatch; matchedAt: st
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-3xl font-bold tabular-nums">{cvMatch.matchScore}</span>
-        <span className="text-sm text-slate-500">/ 100</span>
+        <span className="text-sm text-slate-500 dark:text-slate-400">/ 100</span>
         <span
           className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${MATCH_VERDICT_CLASSES[cvMatch.verdict]}`}
         >
           {MATCH_VERDICT_LABELS[cvMatch.verdict]}
         </span>
         {matchedAt && (
-          <time dateTime={matchedAt} className="ml-auto text-xs text-slate-500">
+          <time dateTime={matchedAt} className="ml-auto text-xs text-slate-500 dark:text-slate-400">
             {matchedAtFormatter.format(new Date(matchedAt))}
           </time>
         )}
@@ -102,7 +105,7 @@ function MatchList({ title, items }: { title: string; items: string[] }) {
     <div>
       <h3 className="mb-1.5 text-sm font-semibold">{title}</h3>
       {items.length === 0 ? (
-        <p className="text-sm text-slate-500">None</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">None</p>
       ) : (
         <ul className="list-disc space-y-1 pl-5 text-sm">
           {items.map((item) => (

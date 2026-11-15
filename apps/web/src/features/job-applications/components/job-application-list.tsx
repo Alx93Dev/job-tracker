@@ -20,7 +20,7 @@ export function JobApplicationList({
 }: JobApplicationListProps) {
   if (jobApplications.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700">
+      <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:text-slate-400 dark:border-slate-700">
         No applications yet. Add the first one to start tracking your search.
       </p>
     );
@@ -32,12 +32,15 @@ export function JobApplicationList({
         <li key={jobApplication.id} className="flex flex-wrap items-center gap-4 p-4">
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium">{jobApplication.positionTitle}</p>
-            <p className="truncate text-sm text-slate-500">
+            <p className="truncate text-sm text-slate-500 dark:text-slate-400">
               {[jobApplication.companyName, jobApplication.location].filter(Boolean).join(' · ')}
             </p>
           </div>
           {jobApplication.appliedAt && (
-            <time dateTime={jobApplication.appliedAt} className="text-sm text-slate-500">
+            <time
+              dateTime={jobApplication.appliedAt}
+              className="text-sm text-slate-500 dark:text-slate-400"
+            >
               {appliedDateFormatter.format(new Date(jobApplication.appliedAt))}
             </time>
           )}
@@ -46,8 +49,9 @@ export function JobApplicationList({
           <div className="flex gap-2">
             <Link
               href={`/applications/${jobApplication.id}/edit`}
+              prefetch={false}
               aria-label={`Edit ${jobApplication.positionTitle} at ${jobApplication.companyName}`}
-              className="rounded-md px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+              className="rounded-md px-2 py-1 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
             >
               Edit
             </Link>
@@ -56,7 +60,7 @@ export function JobApplicationList({
               disabled={deletingApplicationId === jobApplication.id}
               onClick={() => onDelete(jobApplication)}
               aria-label={`Delete ${jobApplication.positionTitle} at ${jobApplication.companyName}`}
-              className="rounded-md px-2 py-1 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:hover:bg-rose-950"
+              className="rounded-md px-2 py-1 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 disabled:opacity-50 dark:hover:bg-rose-950"
             >
               Delete
             </button>

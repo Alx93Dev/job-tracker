@@ -24,16 +24,16 @@ describe('KanbanBoard', () => {
 
     const appliedColumn = screen.getByRole('region', { name: /applied/i });
     expect(within(appliedColumn).getByText('2')).toBeInTheDocument();
-    expect(within(appliedColumn).getByRole('button', { name: /react dev/i })).toBeInTheDocument();
-    expect(within(appliedColumn).getByRole('button', { name: /angular dev/i })).toBeInTheDocument();
+    expect(within(appliedColumn).getByRole('article', { name: 'React Dev' })).toBeInTheDocument();
+    expect(within(appliedColumn).getByRole('article', { name: 'Angular Dev' })).toBeInTheDocument();
 
     const offerColumn = screen.getByRole('region', { name: /offer/i });
-    expect(within(offerColumn).getByRole('button', { name: /vue dev/i })).toBeInTheDocument();
+    expect(within(offerColumn).getByRole('article', { name: 'Vue Dev' })).toBeInTheDocument();
 
     expect(screen.getAllByRole('region')).toHaveLength(5);
   });
 
-  it('exposes cards as keyboard-focusable draggable items', () => {
+  it('gives each card a keyboard drag handle that is not nested in another control', () => {
     render(
       <KanbanBoard
         jobApplications={[buildJobApplication({ positionTitle: 'React Dev', companyName: 'Acme' })]}
@@ -41,8 +41,10 @@ describe('KanbanBoard', () => {
       />,
     );
 
-    const card = screen.getByRole('button', { name: 'React Dev at Acme' });
-    expect(card).toHaveAttribute('tabindex', '0');
-    expect(card).toHaveAttribute('aria-roledescription', 'draggable application');
+    const card = screen.getByRole('article', { name: 'React Dev' });
+    const dragHandle = within(card).getByRole('button', { name: 'Move React Dev at Acme' });
+    expect(dragHandle).toHaveAttribute('aria-roledescription', 'draggable');
+    expect(within(dragHandle).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: 'Edit React Dev' })).toBeInTheDocument();
   });
 });

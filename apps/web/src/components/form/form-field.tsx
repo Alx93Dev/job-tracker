@@ -39,7 +39,7 @@ export function FormField({
         className={INPUT_CLASS_NAME}
       />
       {error && (
-        <span id={errorId} className="text-xs font-normal text-rose-600">
+        <span id={errorId} className="text-xs font-normal text-rose-600 dark:text-rose-400">
           {error.message}
         </span>
       )}

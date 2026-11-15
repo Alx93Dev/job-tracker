@@ -109,12 +109,14 @@ export function JobApplicationForm({
           className={INPUT_CLASS_NAME}
         />
         {errors.jobDescription && (
-          <span className="text-xs font-normal text-rose-600">{errors.jobDescription.message}</span>
+          <span className="text-xs font-normal text-rose-600 dark:text-rose-400">
+            {errors.jobDescription.message}
+          </span>
         )}
       </label>
 
       {submitErrorMessage && (
-        <p role="alert" className="text-sm text-rose-600 sm:col-span-2">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400 sm:col-span-2">
           {submitErrorMessage}
         </p>
       )}

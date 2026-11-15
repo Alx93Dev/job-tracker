@@ -74,6 +74,21 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   ANTHROPIC_MODEL: string = DEFAULT_CLAUDE_MODEL;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  GLOBAL_RATE_LIMIT_PER_MINUTE?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  AUTH_RATE_LIMIT_PER_MINUTE?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  AI_RATE_LIMIT_PER_MINUTE?: number;
 }
 
 export function validateEnvironment(rawConfig: Record<string, unknown>): EnvironmentVariables {
