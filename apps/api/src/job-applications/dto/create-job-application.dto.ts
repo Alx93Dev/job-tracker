@@ -57,4 +57,10 @@ export class CreateJobApplicationDto {
   @IsString()
   @MaxLength(JOB_APPLICATION_LIMITS.notesMaxLength)
   notes?: string;
+
+  @ApiPropertyOptional({ description: 'Full job posting text, used for the CV match' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(JOB_APPLICATION_LIMITS.jobDescriptionMaxLength)
+  jobDescription?: string;
 }

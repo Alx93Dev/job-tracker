@@ -20,6 +20,8 @@ model User {
   email           String           @unique
   passwordHash    String
   name            String?
+  cvText          String?
+  cvUpdatedAt     DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   jobApplications JobApplication[]
@@ -39,19 +41,22 @@ model RefreshToken {
 }
 
 model JobApplication {
-  id            String            @id @default(uuid())
-  userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyName   String
-  positionTitle String
-  jobUrl        String?
-  location      String?
-  salaryRange   String?
-  status        ApplicationStatus @default(WISHLIST)
-  appliedAt     DateTime?
-  notes         String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName    String
+  positionTitle  String
+  jobUrl         String?
+  location       String?
+  salaryRange    String?
+  status         ApplicationStatus @default(WISHLIST)
+  appliedAt      DateTime?
+  notes          String?
+  jobDescription String?
+  cvMatch        Json?
+  cvMatchedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   @@index([userId, status])
 }

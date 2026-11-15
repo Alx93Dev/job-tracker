@@ -4,6 +4,7 @@ export const ROUTES = {
   home: '/',
   login: '/login',
   register: '/register',
+  profile: '/profile',
 } as const;
 
 export const PUBLIC_AUTH_ROUTES: readonly string[] = [ROUTES.login, ROUTES.register];

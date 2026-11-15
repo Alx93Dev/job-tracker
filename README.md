@@ -2,10 +2,12 @@
 
 Full-stack app to track job applications from wishlist to offer. Built as a portfolio project to practise a modern React + NestJS stack end to end.
 
-> **Status:** Phase 3 of 6 — Authentication. See the [roadmap](#roadmap).
+> **Status:** Phase 4 of 6 — AI features. See the [roadmap](#roadmap).
 
 ## Features
 
+- **✨ Fill in from a job posting:** paste a posting and AI extracts company, position, location, salary, seniority and skills into the form
+- **✨ CV match:** compare an application with your CV and get a score, strengths, gaps and talking points for the cover letter or interview
 - **Accounts with secure sessions:** sign up, sign in and sign out; every user only sees their own applications
 - **One-click demo** (`Try the demo`) so anyone can explore the app with sample data, no sign-up needed
 - **Kanban board** with drag and drop between Wishlist → Applied → Interview → Offer → Rejected, usable with mouse, touch **and keyboard** (space to pick up, ←/→ to change column) with screen reader announcements
@@ -17,17 +19,18 @@ Full-stack app to track job applications from wishlist to offer. Built as a port
 
 ## Tech stack
 
-| Layer    | Technology                                                                    |
-| -------- | ----------------------------------------------------------------------------- |
-| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4                 |
-| Data     | TanStack Query 5 (server state)                                               |
-| Forms    | React Hook Form + Zod                                                         |
-| UX       | dnd-kit (accessible drag and drop), next-themes                               |
-| Backend  | NestJS 11, class-validator, Swagger / OpenAPI                                 |
-| Auth     | JWT in httpOnly cookies, rotating refresh tokens, Argon2id, @nestjs/throttler |
-| Database | PostgreSQL 17 + Prisma 6                                                      |
-| Testing  | Vitest + Testing Library (web), Jest (api)                                    |
-| Tooling  | pnpm workspaces, ESLint, Prettier, Docker Compose, GitHub Actions             |
+| Layer    | Technology                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------- |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4                                        |
+| Data     | TanStack Query 5 (server state)                                                                      |
+| Forms    | React Hook Form + Zod                                                                                |
+| UX       | dnd-kit (accessible drag and drop), next-themes                                                      |
+| Backend  | NestJS 11, class-validator, Swagger / OpenAPI                                                        |
+| AI       | Claude API (Claude Opus 5.5) via the Anthropic TypeScript SDK, structured outputs validated with Zod |
+| Auth     | JWT in httpOnly cookies, rotating refresh tokens, Argon2id, @nestjs/throttler                        |
+| Database | PostgreSQL 17 + Prisma 6                                                                             |
+| Testing  | Vitest + Testing Library (web), Jest (api)                                                           |
+| Tooling  | pnpm workspaces, ESLint, Prettier, Docker Compose, GitHub Actions                                    |
 
 ## Architecture
 
@@ -37,7 +40,7 @@ job-tracker/
 │   ├── web/                     Next.js client
 │   │   └── src/
 │   │       ├── app/             Routes (board/list, new, edit, login, register)
-│   │       ├── features/        Feature modules: auth, job-applications
+│   │       ├── features/        Feature modules: ai, auth, job-applications, profile
 │   │       ├── components/      Shared UI (form fields, theme toggle)
 │   │       ├── hooks/           Shared hooks (debounce)
 │   │       ├── lib/             HTTP client with session refresh, routes
@@ -45,9 +48,11 @@ job-tracker/
 │   └── api/                     NestJS REST API
 │       ├── prisma/              Schema, migrations, seed
 │       └── src/
+│           ├── ai/              Claude client, prompts, Zod output schemas
 │           ├── auth/            Register, login, demo, refresh, logout, guards
 │           ├── config/          Env validation and constants
 │           ├── prisma/          PrismaService (global module)
+│           ├── profile/         CV storage
 │           └── job-applications/ Controller, service, DTOs
 ├── docker-compose.yml           PostgreSQL (+ API with the `full` profile)
 └── .github/workflows/ci.yml     Lint, typecheck, test and build on every push
@@ -65,7 +70,7 @@ Requirements: Node 24, pnpm 11 and Docker (or a local PostgreSQL).
 ```bash
 pnpm install
 cp .env.example .env
-cp apps/api/.env.example apps/api/.env   # set JWT_ACCESS_SECRET
+cp apps/api/.env.example apps/api/.env   # set JWT_ACCESS_SECRET (and ANTHROPIC_API_KEY for AI)
 cp apps/web/.env.example apps/web/.env.local
 pnpm db:up          # start PostgreSQL in Docker
 pnpm db:migrate     # apply migrations
@@ -89,19 +94,23 @@ pnpm dev            # web on :3000, api on :4000
 
 ## API
 
-| Method | Endpoint                    | Description                                |
-| ------ | --------------------------- | ------------------------------------------ |
-| POST   | `/api/auth/register`        | Create an account and start a session      |
-| POST   | `/api/auth/login`           | Start a session                            |
-| POST   | `/api/auth/demo`            | Start a session as the demo user           |
-| POST   | `/api/auth/refresh`         | Rotate the refresh token                   |
-| POST   | `/api/auth/logout`          | Revoke the refresh token and clear cookies |
-| GET    | `/api/auth/me`              | Current user                               |
-| GET    | `/api/job-applications`     | List applications (`?status=`, `?search=`) |
-| GET    | `/api/job-applications/:id` | Get one application                        |
-| POST   | `/api/job-applications`     | Create an application                      |
-| PATCH  | `/api/job-applications/:id` | Update an application                      |
-| DELETE | `/api/job-applications/:id` | Delete an application                      |
+| Method | Endpoint                             | Description                                |
+| ------ | ------------------------------------ | ------------------------------------------ |
+| POST   | `/api/auth/register`                 | Create an account and start a session      |
+| POST   | `/api/auth/login`                    | Start a session                            |
+| POST   | `/api/auth/demo`                     | Start a session as the demo user           |
+| POST   | `/api/auth/refresh`                  | Rotate the refresh token                   |
+| POST   | `/api/auth/logout`                   | Revoke the refresh token and clear cookies |
+| GET    | `/api/auth/me`                       | Current user                               |
+| GET    | `/api/job-applications`              | List applications (`?status=`, `?search=`) |
+| GET    | `/api/job-applications/:id`          | Get one application                        |
+| POST   | `/api/job-applications`              | Create an application                      |
+| PATCH  | `/api/job-applications/:id`          | Update an application                      |
+| DELETE | `/api/job-applications/:id`          | Delete an application                      |
+| POST   | `/api/job-applications/:id/cv-match` | Compare the application with the user's CV |
+| POST   | `/api/ai/job-postings/extract`       | Extract structured data from a job posting |
+| GET    | `/api/profile/cv`                    | Get the current user's CV                  |
+| PUT    | `/api/profile/cv`                    | Save the current user's CV                 |
 
 Every endpoint except register, login, demo, refresh and logout requires a session. Job application endpoints only touch the current user's data and answer `404` for anyone else's, so ids cannot be probed.
 
@@ -128,11 +137,21 @@ Every endpoint except register, login, demo, refresh and logout requires a sessi
 - **No open redirects:** the `?next=` page after login only accepts same-site relative paths.
 - **Middleware is a UX hint, the API is the gate.** Next.js middleware only checks that a session cookie exists to avoid flashing protected pages; the API validates the token on every request.
 
+### AI
+
+- **The model is only called from the API.** The API key never reaches the browser, and every AI endpoint requires a session and is rate limited to 10 requests per minute.
+- **Structured outputs with Zod.** Each feature has a Zod schema that is sent to Claude as the output format and used again to parse the answer, so the rest of the code works with typed data and never parses free text.
+- **Inputs are treated as data.** Postings and CVs are pasted by users, so the prompts wrap them in tags and tell the model to ignore any instructions inside them.
+- **Effort per task:** `low` for extraction (a reading task: fast and cheap) and `medium` for the CV comparison, which needs judgement.
+- **Failure handling:** a declined request answers `422`, a truncated or invalid answer `502`, a busy provider `503`. Server-side fallbacks are enabled, so if the model declines a request the API retries it on a fallback model automatically.
+- **Results are stored.** The CV match is saved on the application, so reopening it does not call (and pay for) the model again; it is cleared when the job description changes.
+- **Optional by design.** Without `ANTHROPIC_API_KEY` the AI endpoints answer `503` and the rest of the app keeps working.
+
 ## Roadmap
 
 - [x] **Phase 1 — Foundation:** monorepo, CRUD API, list and form UI, CI
 - [x] **Phase 2 — Kanban & UX:** drag-and-drop board, optimistic updates, search, dark mode toggle
 - [x] **Phase 3 — Auth:** sign-up / login, per-user data, demo account
-- [ ] **Phase 4 — AI:** extract fields from a job posting, match it against your CV
+- [x] **Phase 4 — AI:** extract fields from a job posting, match it against your CV
 - [ ] **Phase 5 — Reminders & analytics:** follow-up jobs, response-rate dashboard
 - [ ] **Phase 6 — Polish:** Playwright E2E, Lighthouse > 90, deployment

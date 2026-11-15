@@ -26,6 +26,7 @@ export const jobApplicationFormSchema = z.object({
   status: z.enum(APPLICATION_STATUSES),
   appliedAt: z.string(),
   notes: z.string().trim().max(JOB_APPLICATION_LIMITS.notesMaxLength),
+  jobDescription: z.string().trim().max(JOB_APPLICATION_LIMITS.jobDescriptionMaxLength),
 });
 
 export type JobApplicationFormValues = z.infer<typeof jobApplicationFormSchema>;
@@ -41,6 +42,7 @@ export const emptyJobApplicationFormValues: JobApplicationFormValues = {
   status: 'WISHLIST',
   appliedAt: '',
   notes: '',
+  jobDescription: '',
 };
 
 export function toFormValues(jobApplication: JobApplication): JobApplicationFormValues {
@@ -53,20 +55,23 @@ export function toFormValues(jobApplication: JobApplication): JobApplicationForm
     status: jobApplication.status,
     appliedAt: jobApplication.appliedAt?.slice(0, ISO_DATE_LENGTH) ?? '',
     notes: jobApplication.notes ?? '',
+    jobDescription: jobApplication.jobDescription ?? '',
   };
 }
 
 export function toPayload(formValues: JobApplicationFormValues): JobApplicationPayload {
-  const emptyToUndefined = (value: string) => (value === '' ? undefined : value);
+  // null (not undefined) so that clearing a field while editing also clears it on the server
+  const emptyToNull = (value: string) => (value === '' ? null : value);
 
   return {
     companyName: formValues.companyName,
     positionTitle: formValues.positionTitle,
-    jobUrl: emptyToUndefined(formValues.jobUrl),
-    location: emptyToUndefined(formValues.location),
-    salaryRange: emptyToUndefined(formValues.salaryRange),
+    jobUrl: emptyToNull(formValues.jobUrl),
+    location: emptyToNull(formValues.location),
+    salaryRange: emptyToNull(formValues.salaryRange),
     status: formValues.status,
-    appliedAt: emptyToUndefined(formValues.appliedAt),
-    notes: emptyToUndefined(formValues.notes),
+    appliedAt: emptyToNull(formValues.appliedAt),
+    notes: emptyToNull(formValues.notes),
+    jobDescription: emptyToNull(formValues.jobDescription),
   };
 }

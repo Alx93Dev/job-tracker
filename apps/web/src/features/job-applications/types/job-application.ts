@@ -1,3 +1,4 @@
+import type { CvMatch } from '@/features/ai/types/cv-match';
 import type { ApplicationStatus } from './application-status';
 
 export interface JobApplication {
@@ -10,6 +11,9 @@ export interface JobApplication {
   status: ApplicationStatus;
   appliedAt: string | null;
   notes: string | null;
+  jobDescription: string | null;
+  cvMatch: CvMatch | null;
+  cvMatchedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

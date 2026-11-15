@@ -18,7 +18,10 @@ import {
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { AI_RATE_LIMIT } from '../ai/ai.constants';
 import { ACCESS_TOKEN_COOKIE } from '../auth/auth.constants';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user';
@@ -70,6 +73,18 @@ export class JobApplicationsController {
     @Body() updateDto: UpdateJobApplicationDto,
   ): Promise<JobApplicationResponseDto> {
     return this.jobApplicationsService.update(currentUser.id, id, updateDto);
+  }
+
+  @Throttle({ default: AI_RATE_LIMIT })
+  @Post(':id/cv-match')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: JobApplicationResponseDto })
+  @ApiUnprocessableEntityResponse({ description: 'Missing job description or CV' })
+  matchWithCv(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<JobApplicationResponseDto> {
+    return this.jobApplicationsService.matchWithCv(currentUser.id, id);
   }
 
   @Delete(':id')

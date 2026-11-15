@@ -81,6 +81,17 @@ export function useChangeJobApplicationStatus() {
   });
 }
 
+export function useCvMatch(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => jobApplicationsApi.matchWithCv(id),
+    onSuccess: (updatedApplication) => {
+      queryClient.setQueryData(jobApplicationKeys.detail(id), updatedApplication);
+      return queryClient.invalidateQueries({ queryKey: jobApplicationKeys.lists() });
+    },
+  });
+}
+
 export function useDeleteJobApplication() {
   const queryClient = useQueryClient();
   return useMutation({

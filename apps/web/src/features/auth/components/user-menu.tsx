@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { isPublicAuthRoute } from '@/lib/routes';
+import { isPublicAuthRoute, ROUTES } from '@/lib/routes';
 import { useCurrentUser, useLogout } from '../hooks/use-auth';
 
 export function UserMenu() {
@@ -21,6 +22,12 @@ export function UserMenu() {
       <span className="hidden text-sm text-slate-500 sm:inline dark:text-slate-400">
         {name ?? email}
       </span>
+      <Link
+        href={ROUTES.profile}
+        className="rounded-md px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+      >
+        My CV
+      </Link>
       <button
         type="button"
         onClick={() => logoutMutation.mutate()}

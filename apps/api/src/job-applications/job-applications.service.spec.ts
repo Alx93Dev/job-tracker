@@ -1,6 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ApplicationStatus, Prisma } from '@prisma/client';
+import { AiService } from '../ai/ai.service';
+import type { CvMatch } from '../ai/schemas/cv-match.schema';
 import { PrismaService } from '../prisma/prisma.service';
 import { jobApplicationResponseSelect } from './job-applications.constants';
 import { JobApplicationsService } from './job-applications.service';
@@ -18,6 +20,9 @@ const storedApplication = {
   status: ApplicationStatus.APPLIED,
   appliedAt: new Date('2026-11-03'),
   notes: null,
+  jobDescription: 'We need React and TypeScript',
+  cvMatch: null,
+  cvMatchedAt: null,
   createdAt: new Date('2026-11-03'),
   updatedAt: new Date('2026-11-03'),
 };
@@ -30,6 +35,8 @@ describe('JobApplicationsService', () => {
     update: jest.fn(),
     deleteMany: jest.fn(),
   };
+  const userRepository = { findUnique: jest.fn() };
+  const aiService = { matchCv: jest.fn() };
   let service: JobApplicationsService;
 
   beforeEach(async () => {
@@ -37,7 +44,11 @@ describe('JobApplicationsService', () => {
     const testingModule = await Test.createTestingModule({
       providers: [
         JobApplicationsService,
-        { provide: PrismaService, useValue: { jobApplication: jobApplicationRepository } },
+        {
+          provide: PrismaService,
+          useValue: { jobApplication: jobApplicationRepository, user: userRepository },
+        },
+        { provide: AiService, useValue: aiService },
       ],
     }).compile();
     service = testingModule.get(JobApplicationsService);
@@ -119,7 +130,7 @@ describe('JobApplicationsService', () => {
   });
 
   it('updates applications owned by the current user', async () => {
-    jobApplicationRepository.findFirst.mockResolvedValue({ id: existingApplicationId });
+    jobApplicationRepository.findFirst.mockResolvedValue(storedApplication);
     jobApplicationRepository.update.mockResolvedValue({
       ...storedApplication,
       status: ApplicationStatus.OFFER,
@@ -148,5 +159,97 @@ describe('JobApplicationsService', () => {
     await expect(service.remove('other-user', existingApplicationId)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  describe('CV match', () => {
+    const cvMatch: CvMatch = {
+      matchScore: 70,
+      verdict: 'PARTIAL',
+      strengths: ['Angular'],
+      gaps: ['React'],
+      talkingPoints: ['Dashboard project'],
+      summary: 'Decent fit.',
+    };
+
+    it('stores the match on the application', async () => {
+      jobApplicationRepository.findFirst.mockResolvedValue(storedApplication);
+      userRepository.findUnique.mockResolvedValue({ cvText: 'Angular developer' });
+      aiService.matchCv.mockResolvedValue(cvMatch);
+      jobApplicationRepository.update.mockResolvedValue({
+        ...storedApplication,
+        cvMatch,
+        cvMatchedAt: new Date(),
+      });
+
+      const updatedApplication = await service.matchWithCv(ownerUserId, existingApplicationId);
+
+      expect(aiService.matchCv).toHaveBeenCalledWith({
+        cvText: 'Angular developer',
+        positionTitle: storedApplication.positionTitle,
+        companyName: storedApplication.companyName,
+        jobDescription: storedApplication.jobDescription,
+      });
+      expect(updatedApplication.cvMatch).toEqual(cvMatch);
+    });
+
+    it('asks for a job description before calling the model', async () => {
+      jobApplicationRepository.findFirst.mockResolvedValue({
+        ...storedApplication,
+        jobDescription: null,
+      });
+      userRepository.findUnique.mockResolvedValue({ cvText: 'Angular developer' });
+
+      await expect(service.matchWithCv(ownerUserId, existingApplicationId)).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
+      expect(aiService.matchCv).not.toHaveBeenCalled();
+    });
+
+    it('asks for a CV before calling the model', async () => {
+      jobApplicationRepository.findFirst.mockResolvedValue(storedApplication);
+      userRepository.findUnique.mockResolvedValue({ cvText: null });
+
+      await expect(service.matchWithCv(ownerUserId, existingApplicationId)).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
+      expect(aiService.matchCv).not.toHaveBeenCalled();
+    });
+
+    it('clears a stored match when the job description changes', async () => {
+      jobApplicationRepository.findFirst.mockResolvedValue({ ...storedApplication, cvMatch });
+      jobApplicationRepository.update.mockResolvedValue(storedApplication);
+
+      await service.update(ownerUserId, existingApplicationId, { jobDescription: 'New text' });
+
+      expect(jobApplicationRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { jobDescription: 'New text', cvMatch: Prisma.DbNull, cvMatchedAt: null },
+        }),
+      );
+    });
+
+    it('keeps the stored match when other fields change', async () => {
+      jobApplicationRepository.findFirst.mockResolvedValue({ ...storedApplication, cvMatch });
+      jobApplicationRepository.update.mockResolvedValue(storedApplication);
+
+      await service.update(ownerUserId, existingApplicationId, {
+        status: ApplicationStatus.INTERVIEW,
+      });
+
+      expect(jobApplicationRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: ApplicationStatus.INTERVIEW } }),
+      );
+    });
+
+    it('drops a stored match that no longer fits the schema', async () => {
+      jobApplicationRepository.findFirst.mockResolvedValue({
+        ...storedApplication,
+        cvMatch: { score: 'old format' },
+      });
+
+      const application = await service.findOne(ownerUserId, existingApplicationId);
+
+      expect(application.cvMatch).toBeNull();
+    });
   });
 });

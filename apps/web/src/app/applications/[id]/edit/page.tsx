@@ -2,6 +2,7 @@
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
+import { CvMatchPanel } from '@/features/ai/components/cv-match-panel';
 import { JobApplicationForm } from '@/features/job-applications/components/job-application-form';
 import {
   useJobApplication,
@@ -25,15 +26,18 @@ export default function EditJobApplicationPage({ params }: { params: Promise<{ i
         </p>
       )}
       {jobApplicationQuery.isSuccess && (
-        <JobApplicationForm
-          initialValues={toFormValues(jobApplicationQuery.data)}
-          submitLabel="Save changes"
-          isSubmitting={updateMutation.isPending}
-          submitErrorMessage={updateMutation.error?.message}
-          onSubmit={(payload) =>
-            updateMutation.mutate(payload, { onSuccess: () => router.push('/') })
-          }
-        />
+        <>
+          <JobApplicationForm
+            initialValues={toFormValues(jobApplicationQuery.data)}
+            submitLabel="Save changes"
+            isSubmitting={updateMutation.isPending}
+            submitErrorMessage={updateMutation.error?.message}
+            onSubmit={(payload) =>
+              updateMutation.mutate(payload, { onSuccess: () => router.push('/') })
+            }
+          />
+          <CvMatchPanel jobApplication={jobApplicationQuery.data} />
+        </>
       )}
     </section>
   );

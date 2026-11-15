@@ -33,6 +33,10 @@ export const jobApplicationsApi = {
     });
   },
 
+  matchWithCv(id: string): Promise<JobApplication> {
+    return apiRequest(`${JOB_APPLICATIONS_PATH}/${id}/cv-match`, { method: 'POST' });
+  },
+
   remove(id: string): Promise<void> {
     return apiRequest(`${JOB_APPLICATIONS_PATH}/${id}`, { method: 'DELETE' });
   },
